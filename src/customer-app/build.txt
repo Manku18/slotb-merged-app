@@ -1,0 +1,52 @@
+[
+  {
+    "id": "d96749da-efb3-42b9-8e72-f863d21f9ad7",
+    "status": "FINISHED",
+    "platform": "ANDROID",
+    "artifacts": {
+      "buildUrl": "https://expo.dev/artifacts/eas/sR4CFJcYSJWq3YYoS7Ppt6.aab",
+      "applicationArchiveUrl": "https://expo.dev/artifacts/eas/sR4CFJcYSJWq3YYoS7Ppt6.aab"
+    },
+    "fingerprint": {
+      "id": "019cbe52-f8f4-7822-865d-968a9a2e42a6",
+      "hash": "b2bb18fb0acf702a07356ad652be6cfb44aca668"
+    },
+    "initiatingActor": {
+      "id": "2baf2020-2ae8-433c-ad03-07d6589a088c",
+      "displayName": "mayankslotb"
+    },
+    "logFiles": [
+      "https://job-logs.eascdn.net/production/d96749da-efb3-42b9-8e72-f863d21f9ad7/1772720710628-85a0c928-59a9-4ff2-9d6f-a566dcaddf45.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T150520Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=79ae872c05c38ad8d6b4506b9bc8e74787ec41fa3cf6a2e268c8591f8747f0523386f60948b5604007baddaaf15b756faab9abfdf85b66c61c5512b97ae69d04a8ca247f5724f4e52006e802c3a246d4ea52a46a390fd0eb795c2260bf580ad073ff7df1755d2e260277f1088f138676538871040a7e7fde23902656e3fc051578d00f35a8ea0614877976c7af2b231d10a75c298c8ca265a5455b5538479bdec2e2d2c181496630c0f8bbd095b6fa1d9a4160e2a2264aa6502bcd86b89c24efd596bf86d8508f0c458d12ec96baf957cd89e07556d28ba2cd89c886342feee6d8b9aa3b14b8e4bc9fd5b24fc07033efe5f551afc62bef94b149186581ea734e",
+      "https://job-logs.eascdn.net/production/d96749da-efb3-42b9-8e72-f863d21f9ad7/1772720725414-c30eee85-97b5-4295-a980-0d1a85a37f79.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T150520Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=3ebbbf1f5f674aca7644d4442e23f3e9d60f1744d2b68cab8b8f2fe4b4f293349361ba3d92442a2f595de04d23a7d8191861aafa0e3ba887ca5c2ff684b8b7b9633bc4ba35fd4f79869cb0ab586c7d6b9eb8aec8a2429b32b01b988ddcdf557f56ad30ad160715f1aaad683a8e2717f8440a06c277c358e33fc9b5fea7f555101b344b9e6b7ab8a1993fab258045993037db097239d350e092200ff9fb30a071ac5b9d8908c3dab5194e3ae73497efc0f6645d960bf4c90787a2bc60037e89c2d9a9d2d0bd4d34f948983ebf784226bc8af7e621e13957c742ee05381792c3789b545dc7c78018279a392c0afcc0d49d2e5b9ef858362e9d1d3ba328f776ae92",
+      "https://job-logs.eascdn.net/production/d96749da-efb3-42b9-8e72-f863d21f9ad7/1772720725675-8ca840db-d6de-470e-bf08-aa617f972e38.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T150520Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=26acd266db5d55a805373bee22ffd8eef5661665a3b9e98dfbf110f4923ec386a5f22210f12351a7d30fb7f1aa47e9903ef9c17d0e5f2ba128a957465c115d40f1d88d338f690c3902d1afb4c0244e659be3a2471438ae890c6a14886dcd8f700b0a910d37f8b79945e4d527b39827b3cbf60ff86ee30839d8f044ca333dc350a5e7fb0e6efb63c7b0525fb94fc71ffcae46570595031b9e1a484ed9f3d4b72b1ca393b1f27fd2bbdbb06c532dde58e1e00298130efb2f2aa9ffa7f38f61031bb10d3daee67b0cab37be67d6d36b59a54bfcd20ec474af3f940b36b23c57207fd00d367b07e0cb9dd1ba334810895b376b67ab7bf173c1b2cddf5c9faf62143c",
+      "https://job-logs.eascdn.net/production/d96749da-efb3-42b9-8e72-f863d21f9ad7/1772720725866-5d69e7e3-0df9-4da4-bbf8-a519ae742043.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T150520Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=2a7701c583e185bcb9f6a10ee4ddd0f6409e94c6b56cc2e52c2a0a30dce8c7f42b6d6f3350df5b1a8a22130bd0f77411acdf0a5d7883a014b5a98d9073eb9ca482ceac98cb5a57d497e0a19ff5980e2c3ad7ad34ca80a58429f4c6958b0336bfa2663870ae4afeb5a6596c12bc4a9b7259500e3a3e5a3e4e67eec69fc8822e9ae72d53a0ce30878959307c427fba6ac22c1265dac3184b21dfdd85a3982e21b42d58c4d9d6bc5499d318909e8d9cb0bb6b213a328a82a9ea144d3335b6dc218c78deccfcd7f1642f9a9f70f4debd3284af4e100a321b522af407725e473b4fa72dead0b170e2ff9f777d0a31f6c38f3b94b3f2fa28e15402cc0073a84e9bc566"
+    ],
+    "project": {
+      "id": "cfdfac5a-7d4d-4836-8c5d-9e64d712d420",
+      "name": "slotb-app",
+      "slug": "slotb-app",
+      "ownerAccount": {
+        "id": "8fb55dd2-0155-4c64-83ce-5838059fefa8",
+        "name": "mayankslotb"
+      }
+    },
+    "distribution": "STORE",
+    "buildProfile": "production",
+    "sdkVersion": "54.0.0",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "1",
+    "gitCommitHash": "bd6715ba91803966c5f4ad01bd7cbd1fc7db0e5e",
+    "gitCommitMessage": "update slotb-app code",
+    "priority": "NORMAL_PLUS",
+    "createdAt": "2026-03-05T14:25:10.402Z",
+    "updatedAt": "2026-03-05T14:30:43.786Z",
+    "completedAt": "2026-03-05T14:30:39.494Z",
+    "expirationDate": "2026-04-04T14:25:10.453Z",
+    "isForIosSimulator": false,
+    "metrics": {
+      "buildWaitTime": 144,
+      "buildQueueTime": 59207,
+      "buildDuration": 268844
+    }
+  }
+]

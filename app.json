@@ -1,0 +1,85 @@
+{
+  "expo": {
+    "name": "SlotB",
+    "slug": "SlotB-Merged-App",
+    "version": "1.0.4",
+    "orientation": "portrait",
+    "backgroundColor": "#000000",
+    "icon": "./src/customer-app/assets/slotblogo.png",
+    "scheme": "slotbpartnerdemo",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./src/customer-app/assets/slotblogo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "android": {
+      "package": "com.slotb.partner",
+      "versionCode": 9,
+      "backgroundColor": "#000000",
+      "userInterfaceStyle": "dark",
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./src/customer-app/assets/slotblogo.png"
+      },
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "ios": {
+      "supportsTablet": true,
+      "backgroundColor": "#000000",
+      "userInterfaceStyle": "dark",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to register your shop address and coordinates."
+      }
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./src/customer-app/assets/slotblogo.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-splash-screen",
+      "expo-image-picker",
+      "expo-location",
+      [
+        "expo-notifications",
+        {
+          "icon": "./src/customer-app/assets/slotblogo.png",
+          "color": "#ffffff"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 26,
+            "buildToolsVersion": "35.0.0",
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "jsEngine": "hermes",
+            "enableMinifyInReleaseBuilds": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fad578e4-325f-4aa4-814e-5b41b5f69709"
+      }
+    },
+    "owner": "mayankslotb"
+  }
+}

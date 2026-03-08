@@ -1,0 +1,27 @@
+﻿
+ΓÜá∩╕Å Detected that your app uses Expo Go for development, this is not recommended when building production apps.
+Learn more: https://expo.fyi/why-not-build-expo-go-for-production
+To suppress this warning, set EAS_BUILD_NO_EXPO_GO_WARNING=true.
+
+The field "cli.appVersionSource" is not set, but it will be required in the future. Learn more: https://docs.expo.dev/build-reference/app-versions/
+Resolved "production" environment for the build. Learn more: https://docs.expo.dev/eas/environment-variables/#setting-the-environment-for-your-builds
+No environment variables with visibility "Plain text" and "Sensitive" found for the "production" environment on EAS.
+
+
+
+The field "cli.appVersionSource" is not set, but it will be required in the future. Learn more: https://docs.expo.dev/build-reference/app-versions/
+Γ£ö Using remote Android credentials (Expo server)
+
+Compressing project files and uploading to EAS Build. Learn more: https://expo.fyi/eas-build-archive
+
+See logs: https://expo.dev/accounts/slotb1/projects/slotb-app/builds/81e94e13-b19b-4f78-973c-fd18be48fb08
+
+Waiting for build to complete. You can press Ctrl+C to exit.
+
+Start builds sooner in the priority queue.
+Sign up for a paid plan at https://expo.dev/accounts/slotb1/settings/billing
+
+Waiting in Free tier queue
+
+≡ƒñû Android build failed:
+Gradle build failed with unknown error. See logs for the "Run gradlew" (https://expo.dev/accounts/slotb1/projects/slotb-app/builds/81e94e13-b19b-4f78-973c-fd18be48fb08#run-gradlew) phase for more information.

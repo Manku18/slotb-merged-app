@@ -1,0 +1,77 @@
+﻿Starting project at E:\aadiiiiii\slotb-app
+node.exe : Error: 
+The required package 
+`expo-asset` cannot 
+be found
+At C:\Program Files\n
+odejs\npx.ps1:29 
+char:3
++   & $NODE_EXE 
+$NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Error:    
+ The requ...canno    
+t be found:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+Error: The required 
+package `expo-asset` 
+cannot be found
+    at 
+getAssetPlugins (E:\a
+adiiiiii\slotb-app\no
+de_modules\@expo\metr
+o-config\src\ExpoMetr
+oConfig.ts:65:11)
+    at 
+getDefaultConfig (E:\
+aadiiiiii\slotb-app\n
+ode_modules\@expo\met
+ro-config\src\ExpoMet
+roConfig.ts:373:21)
+    at 
+loadMetroConfigAsync 
+(E:\aadiiiiii\slotb-a
+pp\node_modules\@expo
+\cli\src\start\server
+\metro\instantiateMet
+ro.ts:96:43)
+    at instantiateMet
+roAsync (E:\aadiiiiii
+\slotb-app\node_modul
+es\@expo\cli\src\star
+t\server\metro\instan
+tiateMetro.ts:195:53)
+    at MetroBundlerDe
+vServer.startImplemen
+tationAsync (E:\aadii
+iiii\slotb-app\node_m
+odules\@expo\cli\src\
+start\server\metro\Me
+troBundlerDevServer.t
+s:940:69)
+    at MetroBundlerDe
+vServer.startAsync (E
+:\aadiiiiii\slotb-app
+\node_modules\@expo\c
+li\src\start\server\B
+undlerDevServer.ts:16
+0:18)
+    at DevServerManag
+er.startAsync (E:\aad
+iiiiii\slotb-app\node
+_modules\@expo\cli\sr
+c\start\server\DevSer
+verManager.ts:184:7)
+    at startAsync (E:
+\aadiiiiii\slotb-app\
+node_modules\@expo\cl
+i\src\start\startAsyn
+c.ts:99:3)

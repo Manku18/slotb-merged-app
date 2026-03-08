@@ -1,0 +1,137 @@
+﻿[
+  {
+    "id": "263b0c09-f155-46b8-aecc-12fdbed8e957",
+    "status": "FINISHED",
+    "platform": "ANDROID",
+    "artifacts": {
+      "buildUrl": "https://expo.dev/artifacts/eas/5HP47kJjrW2ft4xoX78Jv6.aab",
+      "applicationArchiveUrl": "https://expo.dev/artifacts/eas/5HP47kJjrW2ft4xoX78Jv6.aab"
+    },
+    "fingerprint": {
+      "id": "019c22c0-16e4-761c-8082-fed89cb5a2db",
+      "hash": "6ccbc406bd3561badb397d62106cb564e90e21f8"
+    },
+    "initiatingActor": {
+      "id": "2baf2020-2ae8-433c-ad03-07d6589a088c",
+      "displayName": "mayankslotb"
+    },
+    "logFiles": [],
+    "project": {
+      "id": "fad578e4-325f-4aa4-814e-5b41b5f69709",
+      "name": "SlotB-Partner-demo",
+      "slug": "SlotB-Partner-demo",
+      "ownerAccount": {
+        "id": "8fb55dd2-0155-4c64-83ce-5838059fefa8",
+        "name": "mayankslotb"
+      }
+    },
+    "distribution": "STORE",
+    "buildProfile": "production",
+    "sdkVersion": "54.0.0",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "4",
+    "gitCommitHash": "753e37b302af8c8ffede7aebfbc6735f7e5499c4",
+    "gitCommitMessage": "1 step before final touch\n\ndone everything , smooth ui , ranking system , etc",
+    "priority": "NORMAL_PLUS",
+    "createdAt": "2026-02-03T09:05:40.035Z",
+    "updatedAt": "2026-02-03T09:20:03.106Z",
+    "completedAt": "2026-02-03T09:19:55.657Z",
+    "expirationDate": "2026-03-05T09:05:40.061Z",
+    "isForIosSimulator": false,
+    "metrics": {
+      "buildWaitTime": 125,
+      "buildQueueTime": 42870,
+      "buildDuration": 812288
+    }
+  },
+  {
+    "id": "827e42e9-0c62-43b0-8d10-20b28eb611dd",
+    "status": "FINISHED",
+    "platform": "ANDROID",
+    "artifacts": {
+      "buildUrl": "https://expo.dev/artifacts/eas/h7B21fSbVw3tnKCN6LZc5z.apk",
+      "applicationArchiveUrl": "https://expo.dev/artifacts/eas/h7B21fSbVw3tnKCN6LZc5z.apk"
+    },
+    "fingerprint": {
+      "id": "019c1fb3-c1f7-7abe-9081-10e0bb3a477b",
+      "hash": "6265878fbd9cdc069163822c7b7047f4e7cf13be"
+    },
+    "initiatingActor": {
+      "id": "2baf2020-2ae8-433c-ad03-07d6589a088c",
+      "displayName": "mayankslotb"
+    },
+    "logFiles": [],
+    "project": {
+      "id": "fad578e4-325f-4aa4-814e-5b41b5f69709",
+      "name": "SlotB-Partner-demo",
+      "slug": "SlotB-Partner-demo",
+      "ownerAccount": {
+        "id": "8fb55dd2-0155-4c64-83ce-5838059fefa8",
+        "name": "mayankslotb"
+      }
+    },
+    "distribution": "STORE",
+    "buildProfile": "production",
+    "sdkVersion": "54.0.0",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "4",
+    "gitCommitHash": "753e37b302af8c8ffede7aebfbc6735f7e5499c4",
+    "gitCommitMessage": "1 step before final touch\n\ndone everything , smooth ui , ranking system , etc",
+    "priority": "NORMAL_PLUS",
+    "createdAt": "2026-02-02T18:53:20.055Z",
+    "updatedAt": "2026-02-02T19:05:31.590Z",
+    "completedAt": "2026-02-02T19:05:09.824Z",
+    "expirationDate": "2026-03-04T18:53:20.209Z",
+    "isForIosSimulator": false,
+    "metrics": {
+      "buildWaitTime": 443,
+      "buildQueueTime": 40158,
+      "buildDuration": 668615
+    }
+  },
+  {
+    "id": "fb3d1890-6d0e-43f2-a7e0-2d5658f791e0",
+    "status": "FINISHED",
+    "platform": "ANDROID",
+    "artifacts": {
+      "buildUrl": "https://expo.dev/artifacts/eas/x2oNE5hVvDActTYUGb1sNL.apk",
+      "applicationArchiveUrl": "https://expo.dev/artifacts/eas/x2oNE5hVvDActTYUGb1sNL.apk"
+    },
+    "fingerprint": {
+      "id": "019c1eaf-e6be-7c35-961d-3cf8cae86255",
+      "hash": "7526e82835f2130f99614173dc3647a8fa6d136b"
+    },
+    "initiatingActor": {
+      "id": "2baf2020-2ae8-433c-ad03-07d6589a088c",
+      "displayName": "mayankslotb"
+    },
+    "logFiles": [],
+    "project": {
+      "id": "fad578e4-325f-4aa4-814e-5b41b5f69709",
+      "name": "SlotB-Partner-demo",
+      "slug": "SlotB-Partner-demo",
+      "ownerAccount": {
+        "id": "8fb55dd2-0155-4c64-83ce-5838059fefa8",
+        "name": "mayankslotb"
+      }
+    },
+    "distribution": "STORE",
+    "buildProfile": "production",
+    "sdkVersion": "54.0.0",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "4",
+    "gitCommitHash": "753e37b302af8c8ffede7aebfbc6735f7e5499c4",
+    "gitCommitMessage": "1 step before final touch\n\ndone everything , smooth ui , ranking system , etc",
+    "priority": "NORMAL_PLUS",
+    "createdAt": "2026-02-02T14:09:30.223Z",
+    "updatedAt": "2026-02-02T14:30:05.380Z",
+    "completedAt": "2026-02-02T14:29:49.885Z",
+    "expirationDate": "2026-03-04T14:09:30.281Z",
+    "isForIosSimulator": false,
+    "metrics": {
+      "buildWaitTime": 219,
+      "buildQueueTime": 51371,
+      "buildDuration": 1167573
+    }
+  }
+]

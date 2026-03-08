@@ -1,0 +1,85 @@
+[
+  {
+    "id": "7a548914-af21-4406-8c43-d6daeb82a089",
+    "status": "NEW",
+    "platform": "ANDROID",
+    "artifacts": {},
+    "fingerprint": {
+      "id": "019cbec4-2e2c-7f18-81d6-b4fb8b0ab743",
+      "hash": "fc903b46c6d64e8b04f150c5e68da8ec89998250"
+    },
+    "initiatingActor": {
+      "id": "fd290d2a-dc64-4c90-9a5e-d244f74bc190",
+      "displayName": "slotb"
+    },
+    "logFiles": [
+      "https://job-logs.eascdn.net/production/7a548914-af21-4406-8c43-d6daeb82a089/1772727648317-7b0d5fb5-3254-4f8c-b10b-2643f56fc183.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T162111Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=01cec905c491d2f233ef7ca65c9d6731df91d58f9662bb633efcb4ef18c54bf4c2b53cb9c87e304c9cb0595655b0c12aa388598a4f22de60aa650595fae66089f408ab4cf7ad3b7ad6f9cfbb0b090dc30dc85e05b8d063fcab2948afc5e210dff930ff668677b1e5b56f3293ec97a320e7335fe6204d24e7b668e9d73df8f173716c1ead243f1cefa7705c099f4bf4a7253020c889e9652752000b8c223635ce4e696209ecb8febce14c24950bf1b1c869b45729271ad34391a084b7efe6b99ada78064d27097866eaa89dfdd4e6b1dcd8c3e4fc12f0e96367d558db0b6a819cdfb8dd0cc37289ae8f1e8458f4b264a8737a911b9fab8dd198f2a57db9c160cf"
+    ],
+    "project": {
+      "id": "fb91a20f-ed00-4113-b84c-2d905d330ed5",
+      "name": "slotb-app",
+      "slug": "slotb-app",
+      "ownerAccount": {
+        "id": "74a02264-68d7-4784-a913-1792b691ba8f",
+        "name": "slotb"
+      }
+    },
+    "channel": "production",
+    "distribution": "STORE",
+    "buildProfile": "production",
+    "sdkVersion": "54.0.0",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "1",
+    "runtimeVersion": "1.0.0",
+    "gitCommitHash": "ef92cce315ef14ef907256b01306cf350ef82199",
+    "gitCommitMessage": "Complete feature set, branding, and switch to slotb account",
+    "priority": "NORMAL_PLUS",
+    "createdAt": "2026-03-05T16:20:47.938Z",
+    "updatedAt": "2026-03-05T16:20:48.507Z",
+    "expirationDate": "2026-04-04T16:20:47.995Z",
+    "isForIosSimulator": false
+  },
+  {
+    "id": "69f0a760-faa9-4de0-aa59-8677a4b8f62a",
+    "status": "IN_PROGRESS",
+    "platform": "ANDROID",
+    "artifacts": {},
+    "fingerprint": {
+      "id": "019cbec4-2e2c-7f18-81d6-b4fb8b0ab743",
+      "hash": "fc903b46c6d64e8b04f150c5e68da8ec89998250"
+    },
+    "initiatingActor": {
+      "id": "fd290d2a-dc64-4c90-9a5e-d244f74bc190",
+      "displayName": "slotb"
+    },
+    "logFiles": [
+      "https://job-logs.eascdn.net/production/69f0a760-faa9-4de0-aa59-8677a4b8f62a/1772727590184-1086fbe1-900f-4138-ad26-3999e4844312.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T162033Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=90d5df2a75c60365bfa01f9a16c6900e201da1ec124e61798c0a89483b002a468ecdc6f73542a4a6f063e5824aa2e441a79537b9d891b7a3580774e2851e4817a283c6edf122f82a5f3681d7e818afa72b24a0059c9ed4167961756e697d96185b019376bfd6ce3f313c90044c2160d1430153e44737761d3312088dff1faf9b19c47d7440b4c34ebb4e78f82c6bd1d49b66e3c771d9b6a96cfe8d005a9a96b67ea47e6d45ba861e3693a1dd60c3efe3b65665f62095d2e4b446b449a876654f06bfe11267664e04af164164279ff08f3acae7660892afa73617bd4eec7210548ed6664c0062bdf0125d3b52a6df2414139c372322074ad2ccad1a3175f536f7",
+      "https://job-logs.eascdn.net/production/69f0a760-faa9-4de0-aa59-8677a4b8f62a/1772727622294-deff26c0-dd4c-4dff-80c2-412f0fd051f1.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T162033Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=91fa2c82a25d77c57601472c54af8b1ae42c6e41268a939c2333328461a40e97ffb682eef469308699eb26d56848e6d4e8d5c2f30b9bf8efc3cccfe3d9b182a98b941383e9c976a06f9004e1d47651ec5e9dddf9f405b091db736ddd057c31151914321b678bcace9c3ddb5a83b1db4cf8a60c5dc426b3a00e05767fed197aea4779b7b6a41b87b2c03bd0169acb0be6375e50d3192f4dbec5fddc31dc6d376fad03d33b782d045df7e3d586b3773f7127903d53fed42753a0581f2d2836b91132f3dbc191c83f3fb4d9b7d5b38c17b002ba7ddd8c2c6166824aaa57672ea0de736f3dd85ccbe17b5b4a1432c3c0232108bced49958fe1c1369f4e579ca144bf",
+      "https://job-logs.eascdn.net/production/69f0a760-faa9-4de0-aa59-8677a4b8f62a/1772727622525-b1991c08-d081-42b3-84bf-02cb4c4219a1.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T162033Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=5b6a933b80bc69eead585af18de56f88d64a8a6e9280efdb1839d985621b2536abab8146e5adcb446652012feadd4576072e6f9c221f97dd3648a66205febb1ab13a62e2dc31367b8344e0ed3276a35814e4297583c25f3503eb825f8b14be099e00bd6c0125b25a08ec67909b9f577242fbc71810a24ce8f43d0e6471a8b5591d652149fa00e0f0e6eee00fad939645498d483b33517b75559e1bf6bad56206bc404c379fd7d90102e55607f33c24c9ffd0bcb41ae3cbf44792c0f9c3bce055c2cc0e55c688b1582615f97add8492e629b25c3a9c29181a58b137bc011d03e99e02668d0eb750cdcc3c6d058e3df176ae6a0d31eb6223560cec6ce935f47597",
+      "https://job-logs.eascdn.net/production/69f0a760-faa9-4de0-aa59-8677a4b8f62a/1772727622717-31437226-eef0-4e2f-b91b-fdfaea1da864.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T162105Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=2a5e38cb9706ad6c2c6ae8d0268aa66edf3fb8d8967e9c7fba40a1f1461870a023cde895ef73317eda4607af3562a5a44d296994f898fd48570b8a5b56bbba612fc028a873ba56cc5fd47a6cca15a01df24b4ae25cb422367cd3147d68124cd8e0046140a63eaae2cdaba75e853530b462549139191144f002fc94e1c182087310a527f1229cea2c2b02b3249772de71b03706a371883238ac10af81066a0140948b93818e61e7a1244b8549896bcdb022e27f8a9eba82fa5c69bceb847348a62e098d08ebff2d1fe512f1019d7746a607a1ececd2ce39d5f5376cf80d4546759a0875a071a685e1012f20e03f94d71e9700a24e484b3a5c2fdfda37cd06a1f8"
+    ],
+    "project": {
+      "id": "fb91a20f-ed00-4113-b84c-2d905d330ed5",
+      "name": "slotb-app",
+      "slug": "slotb-app",
+      "ownerAccount": {
+        "id": "74a02264-68d7-4784-a913-1792b691ba8f",
+        "name": "slotb"
+      }
+    },
+    "channel": "preview",
+    "distribution": "STORE",
+    "buildProfile": "preview",
+    "sdkVersion": "54.0.0",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "1",
+    "runtimeVersion": "1.0.0",
+    "gitCommitHash": "ef92cce315ef14ef907256b01306cf350ef82199",
+    "gitCommitMessage": "Complete feature set, branding, and switch to slotb account",
+    "priority": "NORMAL_PLUS",
+    "createdAt": "2026-03-05T16:19:49.763Z",
+    "updatedAt": "2026-03-05T16:21:08.962Z",
+    "expirationDate": "2026-04-04T16:19:49.834Z",
+    "isForIosSimulator": false
+  }
+]
