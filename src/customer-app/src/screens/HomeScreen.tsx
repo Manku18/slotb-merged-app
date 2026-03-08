@@ -46,8 +46,9 @@ import { BookingModal } from '../components/BookingModal';
 import HomeHeader, { CardColorConfig } from '../components/HomeHeader';
 
 const { width: W } = Dimensions.get('window');
-const CARD_W = W - 32;
-const REEL_W = W * 0.72;
+const CARD_W = W - 32;      // card width = screen width minus 16px each side
+const REEL_H = 180;         // reel card height in horizontal carousel
+const REEL_CARD_W = W * 0.68; // reel card width in carousel
 
 // ─── Card definitions ─────────────────────────────────────────────────────────
 const CARDS = [
@@ -311,9 +312,12 @@ export default function HomeScreen() {
 
     const onScrollBeginDrag = useCallback(() => {
         isUserTouching.current = true;
+        // Pause auto-scroll when user starts interacting
+        if (autoScrollTimer.current) clearInterval(autoScrollTimer.current);
     }, []);
 
-    const handleScrollEnd = useCallback(
+    // Only update active index AFTER momentum fully stops (prevents shape-glitch mid-swipe)
+    const onMomentumScrollEnd = useCallback(
         (e: NativeSyntheticEvent<NativeScrollEvent>) => {
             const idx = Math.round(e.nativeEvent.contentOffset.x / CARD_W);
             setActiveIndex(Math.max(0, Math.min(idx, CARDS.length - 1)));
@@ -323,8 +327,20 @@ export default function HomeScreen() {
         [startAutoScroll],
     );
 
-    const onScrollEndDrag = handleScrollEnd;
-    const onMomentumScrollEnd = handleScrollEnd;
+    // When drag ends but momentum hasn't started — snap and track
+    const onScrollEndDrag = useCallback(
+        (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+            const velocity = e.nativeEvent.velocity?.x ?? 0;
+            // If very low velocity, momentum won't fire — handle here
+            if (Math.abs(velocity) < 0.2) {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / CARD_W);
+                setActiveIndex(Math.max(0, Math.min(idx, CARDS.length - 1)));
+                isUserTouching.current = false;
+                startAutoScroll();
+            }
+        },
+        [startAutoScroll],
+    );
 
     const activeCard = CARDS[activeIndex];
 
@@ -336,6 +352,7 @@ export default function HomeScreen() {
     }));
 
     const renderCard = ({ item, index }: { item: typeof CARDS[0], index: number }) => {
+        // scrollX at card centre = index * CARD_W (no padding offset)
         const inputRange = [
             (index - 1) * CARD_W,
             index * CARD_W,
@@ -343,17 +360,17 @@ export default function HomeScreen() {
         ];
         const scale = scrollX.interpolate({
             inputRange,
-            outputRange: [0.88, 1, 0.88],
+            outputRange: [0.92, 1, 0.92],
             extrapolate: 'clamp',
         });
         const translateY = scrollX.interpolate({
             inputRange,
-            outputRange: [12, 0, 12],
+            outputRange: [8, 0, 8],
             extrapolate: 'clamp',
         });
         const opacity = scrollX.interpolate({
             inputRange,
-            outputRange: [0.72, 1, 0.72],
+            outputRange: [0.78, 1, 0.78],
             extrapolate: 'clamp',
         });
 
@@ -381,12 +398,18 @@ export default function HomeScreen() {
                             </Text>
                         </View>
 
-                        <Text style={styles.cardTitle}>{item.title}</Text>
-                        <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+                        <Text
+                            style={styles.cardTitle}
+                            numberOfLines={2}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.8}
+                        >{item.title}</Text>
+                        <Text style={styles.cardSubtitle} numberOfLines={2}>{item.subtitle}</Text>
 
                         <TouchableOpacity
-                            activeOpacity={0.85}
+                            activeOpacity={0.75}
                             style={[styles.ctaBtn, { backgroundColor: item.accentColor }]}
+                            hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                             onPress={() => {
                                 if (item.id === 'services') navigation.navigate('Services');
                                 else if (item.id === 'salon') navigation.navigate('Salon');
@@ -441,10 +464,10 @@ export default function HomeScreen() {
                         keyExtractor={c => c.id}
                         horizontal
                         snapToInterval={CARD_W}
-                        snapToAlignment="center"
+                        snapToAlignment="start"
                         decelerationRate="fast"
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 16 }}
+                        contentContainerStyle={{ paddingLeft: 16, paddingRight: 16 }}
                         onScroll={Animated.event(
                             [{ nativeEvent: { contentOffset: { x: scrollX } } }],
                             { useNativeDriver: false },
@@ -911,7 +934,7 @@ function ReelFullScreen({ reel, onClose }: { reel: ReelItem; onClose: () => void
     );
 }
 
-// ─── SlotB Reels — Instagram-style grid + fullscreen modal ───────────────────────
+// ─── SlotB Reels — Horizontal Carousel + fullscreen modal ───────────────────────
 function ReelCarousel() {
     const [reels, setReels] = React.useState<ReelItem[]>(FALLBACK_REELS);
     const [selected, setSelected] = React.useState<ReelItem | null>(null);
@@ -923,15 +946,13 @@ function ReelCarousel() {
             .catch(() => { });
     }, []);
 
-    const THUMB_W = (W - 32 - 8) / 2; // two columns with 8px gap, 16px side padding each side
-
     return (
         <View style={rs.section}>
             {/* Header */}
             <View style={rs.header}>
                 <View>
                     <Text style={rs.sectionTitle}>SlotB Reels</Text>
-                    <Text style={rs.sectionSub}>Tap to watch ▶️</Text>
+                    <Text style={rs.sectionSub}>Tap to watch • Swipe for more ▶️</Text>
                 </View>
                 <View style={rs.livePill}>
                     <View style={rs.liveDot} />
@@ -939,39 +960,47 @@ function ReelCarousel() {
                 </View>
             </View>
 
-            {/* 2-column grid */}
-            <View style={rs.grid}>
-                {reels.map((reel, i) => (
+            {/* Horizontal carousel */}
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={rs.carousel}
+                decelerationRate="fast"
+                snapToInterval={REEL_CARD_W + 12}
+                snapToAlignment="start"
+                disableIntervalMomentum
+            >
+                {reels.map((reel) => (
                     <TouchableOpacity
                         key={String(reel.id)}
-                        style={[rs.gridCard, { width: THUMB_W }]}
+                        style={rs.reelCard}
                         activeOpacity={0.88}
                         onPress={() => setSelected(reel)}
                     >
-                        <Image source={{ uri: reel.thumb }} style={rs.gridThumb} resizeMode="cover" />
+                        <Image source={{ uri: reel.thumb }} style={rs.reelThumb} resizeMode="cover" />
                         <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.72)']}
+                            colors={['transparent', 'rgba(0,0,0,0.8)']}
                             style={StyleSheet.absoluteFill}
                         />
                         {/* duration pill top-right */}
                         <View style={rs.durPill}>
                             <Text style={rs.durText}>{reel.duration}</Text>
                         </View>
-                        {/* play icon center */}
-                        <View style={rs.gridPlay}>
+                        {/* big play icon center */}
+                        <View style={rs.reelPlayCircle}>
                             <Text style={rs.gridPlayIcon}>&#9654;</Text>
                         </View>
-                        {/* tag + title bottom */}
-                        <View style={rs.gridBottom}>
+                        {/* tag + title + views at bottom */}
+                        <View style={rs.reelBottom}>
                             <View style={[rs.gridTag, { backgroundColor: reel.tagColor }]}>
                                 <Text style={rs.gridTagText}>{reel.tag}</Text>
                             </View>
-                            <Text style={rs.gridTitle} numberOfLines={2}>{reel.title}</Text>
+                            <Text style={rs.reelTitle} numberOfLines={2}>{reel.title}</Text>
                             <Text style={rs.gridViews}>👁️ {reel.views}</Text>
                         </View>
                     </TouchableOpacity>
                 ))}
-            </View>
+            </ScrollView>
 
             {/* Full-screen modal */}
             {selected && (
@@ -1014,8 +1043,8 @@ const fp = StyleSheet.create({
     dotSep: { fontSize: 12, color: '#CBD5E1' },
     catChip: { backgroundColor: '#EDE9FE', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
     catText: { fontSize: 10, fontWeight: '800', color: '#7C3AFF' },
-    skills: { fontSize: 11, color: '#64748B', backgroundColor: '#F8FAFC', padding: 7, borderRadius: 8, marginBottom: 10 },
-    bookBtn: { backgroundColor: '#1D4ED8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, marginTop: 8 },
+    skills: { fontSize: 11, color: '#64748B', backgroundColor: '#F8FAFC', padding: 7, borderRadius: 8, marginBottom: 6, flexShrink: 1 },
+    bookBtn: { backgroundColor: '#1D4ED8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 9, paddingHorizontal: 12, borderRadius: 12, marginTop: 4 },
     bookText: { fontSize: 13, fontWeight: '800', color: '#fff' },
     pricePill: { backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
     priceText: { fontSize: 11, fontWeight: '900', color: '#fff' },
@@ -1029,7 +1058,7 @@ const styles = StyleSheet.create({
 
     // ── Carousel ──
     carouselSection: {
-        paddingTop: 4,
+        paddingTop: 12,
         paddingBottom: 0,
     },
     cardOuter: { width: CARD_W },
@@ -1058,7 +1087,7 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255,255,255,1)',
         backgroundColor: 'transparent',
     },
-    cardLeft: { flex: 1, gap: 8 },
+    cardLeft: { flex: 1, gap: 6, justifyContent: 'center' },
     cardRight: {
         marginLeft: 14,
         alignItems: 'center',
@@ -1075,8 +1104,8 @@ const styles = StyleSheet.create({
     },
     badgeText: { fontSize: 9.5, fontWeight: '700', letterSpacing: 0.4 },
     cardTitle: {
-        fontSize: 21, fontWeight: '900', color: '#fff',
-        letterSpacing: 0.3, lineHeight: 26,
+        fontSize: 18, fontWeight: '900', color: '#fff',
+        letterSpacing: 0.3, lineHeight: 23,
     },
     cardSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.72)', lineHeight: 18 },
     ctaBtn: {
@@ -1121,11 +1150,11 @@ const styles = StyleSheet.create({
 
     // ── Promo Service Cards (horizontal sliders) ──
     promoCard: {
-        width: 148,
+        width: 155,
         backgroundColor: '#fff',
         borderRadius: 18,
         padding: 14,
-        gap: 8,
+        gap: 6,
         elevation: 4,
         shadowColor: '#94A3B8',
         shadowOffset: { width: 0, height: 3 },
@@ -1148,11 +1177,12 @@ const styles = StyleSheet.create({
     promoCardPrice: { fontSize: 11, color: '#64748B', fontWeight: '500' },
     promoCardPriceBold: { fontWeight: '900', color: '#1E293B', fontSize: 13 },
     promoCardBtn: {
-        alignSelf: 'flex-start',
         paddingHorizontal: 14,
-        paddingVertical: 7,
+        paddingVertical: 8,
         borderRadius: 10,
-        marginTop: 2,
+        marginTop: 4,
+        alignSelf: 'stretch',
+        alignItems: 'center',
     },
     promoCardBtnTxt: { fontSize: 11, fontWeight: '800', color: '#fff' },
 
@@ -1164,15 +1194,15 @@ const styles = StyleSheet.create({
         borderWidth: 1, borderColor: '#DBEAFE',
     },
     salonCard: {
-        width: W * 0.72,
+        width: W * 0.6,
         backgroundColor: '#fff',
-        borderRadius: 22,
+        borderRadius: 20,
         overflow: 'hidden',
         elevation: 6,
         shadowColor: '#94A3B8',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.18, shadowRadius: 12,
-        marginRight: 16, // added margin for spacing in horizontal view
+        marginRight: 1, // added margin for spacing in horizontal view
     },
     salonImgWrap: { width: '100%', height: 110, position: 'relative' },
     salonImg: { width: '100%', height: 110 },
@@ -1181,13 +1211,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10, paddingVertical: 4,
         borderRadius: 999,
     },
-    openBadgeText: { fontSize: 11, fontWeight: '700', color: '#fff' },
-    salonBody: { padding: 10 },
+    openBadgeText: { fontSize: 10, fontWeight: '700', color: '#fff' },
+    salonBody: { padding: 8, paddingHorizontal: 10 },
     salonNameRow: {
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'space-between', marginBottom: 4,
     },
-    salonName: { fontSize: 15, fontWeight: '800', color: '#1E293B', flex: 1, marginRight: 8 },
+    salonName: { fontSize: 16, fontWeight: '800', color: '#1E293B', flex: 1, marginRight: 8 },
     verifiedBadge: {
         width: 22, height: 22, borderRadius: 11,
         backgroundColor: '#1565C0',
@@ -1209,18 +1239,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'space-between',
         borderTopWidth: 1, borderTopColor: '#F1F5F9',
-        paddingTop: 12,
+        paddingTop: 5,
     },
     salonPrice: { fontSize: 13, color: '#64748B', fontWeight: '500' },
     salonPriceBold: { fontSize: 16, fontWeight: '900', color: '#1E293B' },
     bookNowBtn: {
         backgroundColor: '#E91E8C',
         borderRadius: 999,
-        paddingHorizontal: 16, paddingVertical: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 8,
         elevation: 4,
         shadowColor: '#E91E8C',
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.3, shadowRadius: 8,
+        marginLeft: 6,
     },
     bookNowText: { fontSize: 13, fontWeight: '800', color: '#fff' },
 
@@ -1339,41 +1371,49 @@ const rs = StyleSheet.create({
     liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#EF4444' },
     liveText: { fontSize: 10, fontWeight: '900', color: '#EF4444', letterSpacing: 0.8 },
 
-    // ── Reels Grid ──
-    grid: {
-        flexDirection: 'row', flexWrap: 'wrap',
-        gap: 8, paddingHorizontal: 16, paddingBottom: 8,
-    },
-    gridCard: {
-        borderRadius: 16, overflow: 'hidden',
-        height: 220,
+    // ── Reels Horizontal Carousel ──
+    carousel: { paddingHorizontal: 16, gap: 12, paddingBottom: 4 },
+    reelCard: {
+        width: REEL_CARD_W,
+        height: REEL_H,
+        borderRadius: 18,
+        overflow: 'hidden',
         backgroundColor: '#1a1a2e',
-        elevation: 6,
+        elevation: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25, shadowRadius: 10,
+        shadowOpacity: 0.28, shadowRadius: 12,
     },
-    gridThumb: { width: '100%', height: '100%', position: 'absolute' },
+    reelThumb: { position: 'absolute', width: '100%', height: '100%' },
+    reelPlayCircle: {
+        position: 'absolute',
+        top: 0, bottom: 40, left: 0, right: 0,
+        alignItems: 'center', justifyContent: 'center',
+    },
+    reelBottom: {
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        padding: 12,
+    },
+    reelTitle: {
+        fontSize: 13, fontWeight: '800', color: '#fff',
+        lineHeight: 17, marginBottom: 4,
+        textShadowColor: 'rgba(0,0,0,0.6)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 4,
+    },
     durPill: {
-        position: 'absolute', top: 8, right: 8,
+        position: 'absolute', top: 10, right: 10,
         backgroundColor: 'rgba(0,0,0,0.65)',
-        paddingHorizontal: 7, paddingVertical: 3,
+        paddingHorizontal: 8, paddingVertical: 3,
         borderRadius: 999,
     },
     durText: { fontSize: 10, fontWeight: '700', color: '#fff' },
-    gridPlay: {
-        ...StyleSheet.absoluteFillObject,
-        alignItems: 'center', justifyContent: 'center',
-    },
+    gridPlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
     gridPlayIcon: {
-        fontSize: 28, color: 'rgba(255,255,255,0.85)',
+        fontSize: 32, color: 'rgba(255,255,255,0.92)',
         textShadowColor: 'rgba(0,0,0,0.6)',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 6,
-    },
-    gridBottom: {
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: 10,
     },
     gridTag: {
         alignSelf: 'flex-start',
@@ -1381,14 +1421,13 @@ const rs = StyleSheet.create({
         borderRadius: 999, marginBottom: 5,
     },
     gridTagText: { fontSize: 9, fontWeight: '900', color: '#fff', letterSpacing: 0.3 },
-    gridTitle: {
-        fontSize: 13, fontWeight: '800', color: '#fff',
-        lineHeight: 17, marginBottom: 4,
-        textShadowColor: 'rgba(0,0,0,0.6)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 4,
-    },
     gridViews: { fontSize: 10, color: 'rgba(255,255,255,0.75)', fontWeight: '600' },
+    // kept for unused compat
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16 },
+    gridCard: { borderRadius: 16, overflow: 'hidden', height: 220, backgroundColor: '#1a1a2e' },
+    gridThumb: { width: '100%', height: '100%', position: 'absolute' },
+    gridBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 10 },
+    gridTitle: { fontSize: 13, fontWeight: '800', color: '#fff', lineHeight: 17, marginBottom: 4 },
 });
 
 // ─── Full-Screen Reel Modal Styles ────────────────────────────────────────────

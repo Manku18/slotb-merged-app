@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
+import { AlertEmitter } from '../components/AlertEmitter';
 
 // --- CONFIGURATION ---
 // Change this to your actual PHP backend URL. Please upload `api_auth.php` (created in your folder root) to your Hostinger server public_html and change this URL to it!
@@ -81,12 +81,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 await AsyncStorage.setItem('@user', JSON.stringify(loggedInUser));
                 return true;
             } else {
-                Alert.alert("Login Failed", parsed.message || "Invalid credentials");
+                AlertEmitter.show({ type: 'error', title: 'Login Failed', message: parsed.message || 'Invalid credentials. Please check your email and password.' });
                 return false;
             }
         } catch (e) {
             console.error("Login Error:", e);
-            Alert.alert("Network Error", "Could not connect to the server.");
+            AlertEmitter.show({ type: 'error', title: 'Network Error', message: 'Could not connect to the server. Please check your internet connection.' });
             return false;
         }
     };
@@ -110,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('Signup Raw:', raw);
             const startIdx = raw.indexOf('{');
             if (startIdx === -1) {
-                Alert.alert("Server Error", "Could not connect to database or invalid server response.");
+                AlertEmitter.show({ type: 'error', title: 'Server Error', message: 'Could not connect to the server. Please try again later.' });
                 return false;
             }
             const parsed = JSON.parse(raw.substring(startIdx));
@@ -124,12 +124,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 await AsyncStorage.setItem('@user', JSON.stringify(registeredUser));
                 return true; // Sent successfully
             } else {
-                Alert.alert("Signup Failed", parsed.message || "Email might be already taken.");
+                AlertEmitter.show({ type: 'error', title: 'Sign Up Failed', message: parsed.message || 'This email might already be registered. Try logging in instead.' });
                 return false;
             }
         } catch (e) {
             console.error(e);
-            Alert.alert("Network Error", "Could not connect to the server API Endpoint.");
+            AlertEmitter.show({ type: 'error', title: 'Network Error', message: 'Could not connect to the server. Please check your internet connection.' });
             return false;
         }
     };
@@ -147,14 +147,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             const parsed = await res.json();
             if (parsed.status === 'ok') {
-                Alert.alert("OTP Sent", "A verification code has been sent to your email.");
+                AlertEmitter.show({ type: 'success', title: 'OTP Sent!', message: 'A verification code has been sent to your email address.' });
                 return true;
             } else {
-                Alert.alert("Error", parsed.message || "Failed to send OTP.");
+                AlertEmitter.show({ type: 'error', title: 'Failed to Send OTP', message: parsed.message || 'Could not send OTP. Please try again.' });
                 return false;
             }
         } catch (e) {
-            Alert.alert("Network Error", "Could not connect to the server.");
+            AlertEmitter.show({ type: 'error', title: 'Network Error', message: 'Could not connect to the server. Please check your internet connection.' });
             return false;
         }
     };
@@ -174,14 +174,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             const parsed = await res.json();
             if (parsed.status === 'ok') {
-                Alert.alert("Success", "Your password has been reset successfully.");
+                AlertEmitter.show({ type: 'success', title: 'Password Reset!', message: 'Your password has been reset successfully. Please log in with your new password.' });
                 return true;
             } else {
-                Alert.alert("Error", parsed.message || "Failed to reset password.");
+                AlertEmitter.show({ type: 'error', title: 'Reset Failed', message: parsed.message || 'Could not reset your password. Please check the OTP and try again.' });
                 return false;
             }
         } catch (e) {
-            Alert.alert("Network Error", "Could not connect to the server.");
+            AlertEmitter.show({ type: 'error', title: 'Network Error', message: 'Could not connect to the server. Please check your internet connection.' });
             return false;
         }
     };
@@ -201,11 +201,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (parsed.status === 'ok') {
                 return true;
             } else {
-                Alert.alert("Error", parsed.message || "Failed to send OTP.");
+                AlertEmitter.show({ type: 'error', title: 'OTP Error', message: parsed.message || 'Failed to send OTP. Please try again.' });
                 return false;
             }
         } catch (e) {
-            Alert.alert("Network Error", "Could not connect to the server.");
+            AlertEmitter.show({ type: 'error', title: 'Network Error', message: 'Could not connect to the server. Please check your internet connection.' });
             return false;
         }
     };
@@ -230,7 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('Verify Signup Raw:', raw);
             const startIdx = raw.indexOf('{');
             if (startIdx === -1) {
-                Alert.alert("Server Error", "Invalid server response.");
+                AlertEmitter.show({ type: 'error', title: 'Server Error', message: 'Invalid server response. Please try again later.' });
                 return false;
             }
             const parsed = JSON.parse(raw.substring(startIdx));
@@ -244,12 +244,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 await AsyncStorage.setItem('@user', JSON.stringify(registeredUser));
                 return true;
             } else {
-                Alert.alert("Signup Failed", parsed.message || "Invalid OTP or details.");
+                AlertEmitter.show({ type: 'error', title: 'Verification Failed', message: parsed.message || 'Invalid OTP or details. Please check and try again.' });
                 return false;
             }
         } catch (e) {
             console.error(e);
-            Alert.alert("Network Error", "Could not connect to the server.");
+            AlertEmitter.show({ type: 'error', title: 'Network Error', message: 'Could not connect to the server. Please check your internet connection.' });
             return false;
         }
     };

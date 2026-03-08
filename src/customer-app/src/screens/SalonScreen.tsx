@@ -280,7 +280,7 @@ const RecentCard = ({ item, onBook }: { item: Recent, onBook: (salonId: string, 
             </View>
 
             {/* Book Again button */}
-            <TouchableOpacity activeOpacity={0.85} style={styles.bookSlotBtn} onPress={() => onBook(item.id, item.name)}>
+            <TouchableOpacity activeOpacity={0.75} style={styles.bookSlotBtn} onPress={() => onBook(item.id, item.name)}>
                 <LinearGradient
                     colors={['#6D28D9', '#7C3AED']}
                     style={styles.bookSlotGrad}
@@ -586,7 +586,7 @@ const SalonCard = ({ salon, userCoords, onDetails, onBook }: { salon: Salon; use
             </View>
 
             {/* Book button with glow */}
-            <TouchableOpacity activeOpacity={0.85} style={styles.bookSlotBtn} onPress={() => onBook(salon.id, salon.name)}>
+            <TouchableOpacity activeOpacity={0.75} hitSlop={{ top: 2, bottom: 2 }} style={styles.bookSlotBtn} onPress={() => onBook(salon.id, salon.name)}>
                 <LinearGradient
                     colors={['#1E40AF', '#1D4ED8']}
                     style={styles.bookSlotGrad}
@@ -801,6 +801,27 @@ export default function SalonScreen() {
         outputRange: [0, 1],
         extrapolate: 'clamp',
     });
+    // ── Search bar animations matching CollapsibleSearchBar in HomeHeader ──
+    const searchBarHeight = scrollY.interpolate({
+        inputRange: [0, SCROLL_DISTANCE],
+        outputRange: [52, 44],
+        extrapolate: 'clamp',
+    });
+    const searchBarRadius = scrollY.interpolate({
+        inputRange: [0, SCROLL_DISTANCE],
+        outputRange: [16, 22],
+        extrapolate: 'clamp',
+    });
+    const searchBarShadowOpacity = scrollY.interpolate({
+        inputRange: [0, SCROLL_DISTANCE],
+        outputRange: [0.06, 0.14],
+        extrapolate: 'clamp',
+    });
+    const searchBarElevation = scrollY.interpolate({
+        inputRange: [0, SCROLL_DISTANCE],
+        outputRange: [2, 5],
+        extrapolate: 'clamp',
+    });
     const GRAD_H = insets.top + 140;
 
     const baseFiltered = salons.filter(s => {
@@ -930,7 +951,7 @@ export default function SalonScreen() {
                         </View>
                     </Animated.View>
 
-                    {/* -- Search Bar -- */}
+                    {/* -- Search Bar (matches HomeScreen CollapsibleSearchBar exactly) -- */}
                     <Animated.View
                         style={[
                             styles.salonSearchSpace,
@@ -941,18 +962,29 @@ export default function SalonScreen() {
                             style={[styles.salonSearchBlurBg, { opacity: searchBgOpacity }]}
                             pointerEvents="none"
                         />
-                        <View style={styles.salonSearchWrapper}>
-                            <Search size={16} color="#9CA3AF" strokeWidth={2} style={styles.searchIcon} />
+                        {/* Animated bar — height/radius/shadow match CollapsibleSearchBar */}
+                        <Animated.View
+                            style={[
+                                styles.salonSearchWrapper,
+                                {
+                                    height: searchBarHeight,
+                                    borderRadius: searchBarRadius,
+                                    shadowOpacity: searchBarShadowOpacity,
+                                    elevation: searchBarElevation,
+                                },
+                            ]}
+                        >
+                            <Search size={18} color="#9CA3AF" strokeWidth={2} />
                             <TextInput
                                 style={styles.searchPlaceholder}
                                 placeholder="Search salons, services..."
-                                placeholderTextColor="#aaa"
+                                placeholderTextColor="#9CA3AF"
                                 value={searchText}
                                 onChangeText={setSearchText}
                                 selectionColor="#1D4ED8"
                             />
                             {searchText ? (
-                                <TouchableOpacity onPress={() => setSearchText('')} style={{ marginRight: 8 }}>
+                                <TouchableOpacity onPress={() => setSearchText('')} style={{ marginRight: 4 }}>
                                     <X size={14} color="#9CA3AF" strokeWidth={2} />
                                 </TouchableOpacity>
                             ) : null}
@@ -962,9 +994,9 @@ export default function SalonScreen() {
                                 hitSlop={12}
                                 onPress={() => navigation.navigate('ScanQR')}
                             >
-                                <QrCode size={16} color="#6B7280" strokeWidth={1.8} />
+                                <QrCode size={18} color="#6B7280" strokeWidth={1.8} />
                             </TouchableOpacity>
-                        </View>
+                        </Animated.View>
                     </Animated.View>
                     <LocationSelectorModal
                         visible={locationModalVisible}
@@ -1020,13 +1052,14 @@ export default function SalonScreen() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        pagingEnabled
+                        pagingEnabled={false}
                         decelerationRate="fast"
-                        snapToInterval={width - 32 + 12}
+                        snapToInterval={width - 32}
+                        snapToAlignment="start"
                         contentContainerStyle={styles.carouselContent}
                         onScroll={(e) => {
-                            const idx = Math.round(e.nativeEvent.contentOffset.x / (width - 32 + 12));
-                            setActiveDot(idx);
+                            const idx = Math.round(e.nativeEvent.contentOffset.x / (width - 32));
+                            setActiveDot(Math.max(0, Math.min(idx, carouselData.length - 1)));
                         }}
                         scrollEventThrottle={16}
                     >
@@ -1062,7 +1095,8 @@ export default function SalonScreen() {
                                         </View>
                                         <TouchableOpacity
                                             style={styles.heroBookBtn}
-                                            activeOpacity={0.85}
+                                            activeOpacity={0.75}
+                                            hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                                             onPress={() => { setFeaturedSalon(f); setIbVisible(true); }}
                                         >
                                             <Text style={styles.heroBookBtnText}>Book Now</Text>
@@ -1096,6 +1130,8 @@ export default function SalonScreen() {
                     contentContainerStyle={styles.cardsRow}
                     decelerationRate="fast"
                     snapToInterval={CARD_W + 14}
+                    snapToAlignment="start"
+                    disableIntervalMomentum={true}
                 >
                     {filteredSalons.map((salon) => (
                         <SalonCard
@@ -1123,6 +1159,8 @@ export default function SalonScreen() {
                     contentContainerStyle={styles.recentsRow}
                     decelerationRate="fast"
                     snapToInterval={RECENT_W + 14}
+                    snapToAlignment="start"
+                    disableIntervalMomentum={true}
                 >
                     {recentBookings.map((item) => {
                         // Merge with live data if salon exists in main list
@@ -1233,12 +1271,16 @@ const styles = StyleSheet.create({
         borderRadius: 16, top: -4, bottom: -4,
     },
     salonSearchWrapper: {
+        // Static values — borderRadius/height/shadowOpacity/elevation driven by animated interpolations
         flexDirection: 'row', alignItems: 'center',
-        backgroundColor: '#fff', borderRadius: 28, height: 46,
-        paddingHorizontal: 16,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.07, shadowRadius: 8, elevation: 3,
-        borderWidth: 1, borderColor: '#EBEBEB',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1, borderColor: '#E8ECF0',
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 3 },
+        shadowRadius: 8,
+        overflow: 'hidden',
+        paddingHorizontal: 14,
+        gap: 10,
     },
 
     // Header -- legacy (kept for reference, not used by new header)
@@ -1276,7 +1318,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14, paddingVertical: 11,
     },
     searchIcon: { marginRight: 8 },
-    searchPlaceholder: { flex: 1, fontSize: 15, color: '#1A1D26', fontWeight: '500', paddingVertical: 0 },
+    searchPlaceholder: { flex: 1, fontSize: 14, color: '#111827', fontWeight: '400', paddingVertical: 0 },
     qrBtn: { padding: 2 },
 
     // Category chips
@@ -1316,18 +1358,20 @@ const styles = StyleSheet.create({
     heroLiveText: { fontSize: 10, fontWeight: '700', color: '#fff', letterSpacing: 0.4 },
     heroContent: {
         position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: 16,
+        padding: 14,
+        paddingBottom: 14,
     },
-    heroName: { fontSize: 19, fontWeight: '800', color: '#fff', marginBottom: 3, letterSpacing: 0.2 },
-    heroOffer: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginBottom: 10, fontWeight: '500' },
+    heroName: { fontSize: 17, fontWeight: '800', color: '#fff', marginBottom: 2, letterSpacing: 0.2 },
+    heroOffer: { fontSize: 11, color: 'rgba(255,255,255,0.75)', marginBottom: 6, fontWeight: '500' },
     heroRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    heroMeta: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
-    heroMetaText: { fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
+    heroMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, marginRight: 4 },
+    heroMetaText: { fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: '500', flexShrink: 1 },
     heroBookBtn: {
         backgroundColor: '#fff',
         borderRadius: 20,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 7,
+        marginLeft: 8,
     },
     heroBookBtnText: { fontSize: 12, fontWeight: '800', color: '#1E1040' },
     carouselDots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 10 },

@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
     KeyboardAvoidingView, Platform, ActivityIndicator, Image,
-    Dimensions, Keyboard, TouchableWithoutFeedback, Alert
+    Dimensions, Keyboard, TouchableWithoutFeedback, Animated
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Mail, Lock, User, KeyRound, ArrowRight, X } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../constants/Colors';
+import CustomAlert from '../components/CustomAlert';
+import { AlertEmitter, AlertPayload } from '../components/AlertEmitter';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,6 +28,20 @@ export default function AuthScreen({ onClose }: Props) {
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
 
+    // Custom Alert state
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertPayload, setAlertPayload] = useState<AlertPayload>({
+        type: 'error', title: '', message: '',
+    });
+
+    useEffect(() => {
+        const unsub = AlertEmitter.addListener((payload) => {
+            setAlertPayload(payload);
+            setAlertVisible(true);
+        });
+        return unsub;
+    }, []);
+
     const handleAction = async () => {
         if (!email) return;
         setIsLoading(true);
@@ -39,7 +55,7 @@ export default function AuthScreen({ onClose }: Props) {
             } else if (mode === 'SIGNUP') {
                 if (!name || !password) { setIsLoading(false); return; }
                 if (password.length < 6) {
-                    Alert.alert("Error", "Password must be at least 6 characters.");
+                    AlertEmitter.show({ type: 'warning', title: 'Weak Password', message: 'Password must be at least 6 characters long.' });
                     setIsLoading(false);
                     return;
                 }
@@ -50,7 +66,7 @@ export default function AuthScreen({ onClose }: Props) {
                 if (success) setMode('RESET_PASSWORD');
             } else if (mode === 'RESET_PASSWORD') {
                 if (!otp || !newPassword) {
-                    Alert.alert("Error", "Please enter OTP and new password.");
+                    AlertEmitter.show({ type: 'warning', title: 'Missing Fields', message: 'Please enter both the OTP and your new password.' });
                     setIsLoading(false);
                     return;
                 }
@@ -96,6 +112,16 @@ export default function AuthScreen({ onClose }: Props) {
                 <LinearGradient
                     colors={['#fdfbfb', '#ebedee']}
                     style={StyleSheet.absoluteFillObject}
+                />
+
+                {/* Beautiful custom alert */}
+                <CustomAlert
+                    visible={alertVisible}
+                    type={alertPayload.type}
+                    title={alertPayload.title}
+                    message={alertPayload.message}
+                    buttonText={alertPayload.buttonText || 'OK'}
+                    onClose={() => setAlertVisible(false)}
                 />
 
                 <KeyboardAvoidingView
