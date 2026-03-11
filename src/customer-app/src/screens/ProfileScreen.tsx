@@ -552,6 +552,12 @@ export default function ProfileScreen() {
                                 >
                                     {delLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnTxt}>Verify & Delete Permanently</Text>}
                                 </TouchableOpacity>
+
+                                <View style={styles.tipBox}>
+                                    <Text style={styles.tipText}>
+                                        Tip: If you don't see the code, check your spam folder as automated emails can sometimes be filtered.
+                                    </Text>
+                                </View>
                             </View>
                         )}
                     </View>
@@ -713,4 +719,7 @@ const styles = StyleSheet.create({
     warningBox: { backgroundColor: '#fef2f2', padding: 16, borderRadius: 12, flexDirection: 'row', gap: 12, alignItems: 'flex-start', borderWidth: 1, borderColor: '#fee2e2', marginTop: 10 },
     warningTxt: { flex: 1, fontSize: 13, color: '#991b1b', lineHeight: 18, fontWeight: '500' },
     otpInfo: { fontSize: 14, color: Colors.text, textAlign: 'center', lineHeight: 20, paddingHorizontal: 20 },
+
+    tipBox: { marginTop: 15, padding: 12, backgroundColor: '#f0f9ff', borderRadius: 10, borderWidth: 1, borderColor: '#e0f2fe' },
+    tipText: { fontSize: 11, color: '#0369a1', textAlign: 'center', lineHeight: 16, fontWeight: '500' },
 });
