@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -292,6 +292,19 @@ export default function HomeScreen() {
         }
     }, [user?.email, userLocation]);
 
+    // Memoized sorted salons based on distance
+    const sortedSalons = useMemo(() => {
+        if (!coords || !topSalons.length) return topSalons;
+
+        return [...topSalons].sort((a, b) => {
+            const distA = a.latitude && a.longitude ?
+                parseFloat(calculateDistance(coords.latitude, coords.longitude, Number(a.latitude), Number(a.longitude)) || '9999') : 9999;
+            const distB = b.latitude && b.longitude ?
+                parseFloat(calculateDistance(coords.latitude, coords.longitude, Number(b.latitude), Number(b.longitude)) || '9999') : 9999;
+            return distA - distB;
+        });
+    }, [topSalons, coords]);
+
     useEffect(() => {
         startAutoScroll();
 
@@ -568,7 +581,7 @@ export default function HomeScreen() {
                         </TouchableOpacity>
                     </View>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
-                        {topSalons.map((salon: any) => (
+                        {sortedSalons.map((salon: any) => (
                             <TouchableOpacity key={salon.id} style={styles.salonCard} activeOpacity={0.88}>
                                 <View style={styles.salonImgWrap}>
                                     <Image source={salon.image} style={styles.salonImg} resizeMode="cover" />
@@ -589,8 +602,8 @@ export default function HomeScreen() {
                                         <Text style={styles.salonReviews}>({salon.reviews} reviews)</Text>
                                     </View>
                                     <View style={styles.salonMetaRow}>
-                                        <View style={styles.salonMetaPill}>
-                                            <Text style={styles.salonMetaText}>🕐 {salon.wait}</Text>
+                                        <View style={[styles.salonMetaPill, { backgroundColor: '#F0FDF4' }]}>
+                                            <Text style={[styles.salonMetaText, { color: '#16A34A' }]}>🕐 {salon.wait}</Text>
                                         </View>
                                         <View style={styles.salonMetaPill}>
                                             <Text style={styles.salonMetaText}>
@@ -601,7 +614,7 @@ export default function HomeScreen() {
                                         </View>
                                     </View>
                                     <View style={styles.salonFooter}>
-                                        <Text style={styles.salonPrice}>From <Text style={styles.salonPriceBold}>{salon.price}</Text></Text>
+                                        <Text style={styles.salonPrice}>{salon.price}</Text>
                                         <TouchableOpacity
                                             style={styles.bookNowBtn}
                                             activeOpacity={0.85}

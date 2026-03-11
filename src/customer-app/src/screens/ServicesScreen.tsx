@@ -14,6 +14,7 @@ import {
 } from 'lucide-react-native';
 import { useLocation } from '../context/LocationContext';
 import * as Location from 'expo-location';
+import LocationSelectorModal from '../components/LocationSelectorModal';
 
 const { width: W } = Dimensions.get('window');
 
@@ -530,23 +531,10 @@ export default function ServicesScreen() {
     const [minRating, setMinRating] = useState(0);
     const [availability, setAvailability] = useState('all');
 
-    // Location
-    const [userLat, setUserLat] = useState<number | null>(null);
-    const [userLon, setUserLon] = useState<number | null>(null);
-
-    // ── Fetch location ────────────────────────────────────────────────────────
-    useEffect(() => {
-        (async () => {
-            try {
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status === 'granted') {
-                    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-                    setUserLat(loc.coords.latitude);
-                    setUserLon(loc.coords.longitude);
-                }
-            } catch (_) { }
-        })();
-    }, []);
+    const insets = useSafeAreaInsets();
+    const navigation = useNavigation<any>();
+    const { userLocation, coords, refreshLocation, isLocating } = useLocation();
+    const [locationModalVisible, setLocationModalVisible] = useState(false);
 
     // ── Fetch categories ──────────────────────────────────────────────────────
     const fetchCategories = useCallback(async () => {
@@ -559,7 +547,7 @@ export default function ServicesScreen() {
     }, []);
 
     // ── Fetch providers ───────────────────────────────────────────────────────
-    const fetchProviders = useCallback(async (cat = activeCat, s = sort, mr = minRating, lat = userLat, lon = userLon) => {
+    const fetchProviders = useCallback(async (cat = activeCat, s = sort, mr = minRating, lat = coords?.latitude || null, lon = coords?.longitude || null) => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -579,10 +567,10 @@ export default function ServicesScreen() {
             if (json.status === 'ok') setProviders(json.providers);
         } catch (_) { }
         finally { setLoading(false); setRefreshing(false); }
-    }, [activeCat, sort, minRating, userLat, userLon]);
+    }, [activeCat, sort, minRating, coords]);
 
     useEffect(() => { fetchCategories(); }, []);
-    useEffect(() => { fetchProviders(activeCat, sort, minRating, userLat, userLon); }, [activeCat, sort, minRating, userLat, userLon]);
+    useEffect(() => { fetchProviders(activeCat, sort, minRating, coords?.latitude || null, coords?.longitude || null); }, [activeCat, sort, minRating, coords]);
 
     const onRefresh = () => { setRefreshing(true); fetchProviders(); };
 
@@ -613,10 +601,6 @@ export default function ServicesScreen() {
     // ── Active category color ──────────────────────────────────────────────────
     const activeCatObj = categories.find(c => c.id === activeCat);
     const accentColor = activeCatObj?.color ?? PURPLE;
-
-    const insets = useSafeAreaInsets();
-    const navigation = useNavigation<any>();
-    const { userLocation } = useLocation();
 
     // ── Salon-style header collapse ───────────────────────────────────────────
     const SCROLL_DISTANCE = 100;
@@ -664,7 +648,11 @@ export default function ServicesScreen() {
                         styles.headerTopRow,
                         { opacity: topRowOpacity, transform: [{ translateY: topRowTranslateY }] },
                     ]}>
-                        <TouchableOpacity style={styles.locationPill} activeOpacity={0.8}>
+                        <TouchableOpacity
+                            style={styles.locationPill}
+                            activeOpacity={0.8}
+                            onPress={() => setLocationModalVisible(true)}
+                        >
                             <MapPin size={14} color="#1A73E8" strokeWidth={2.2} />
                             <View style={styles.locationTextWrap}>
                                 <Text style={styles.locationCity} numberOfLines={1}>{userLocation}</Text>
@@ -750,7 +738,7 @@ export default function ServicesScreen() {
                                     ? 'Loading...'
                                     : `${filtered.length} Provider${filtered.length !== 1 ? 's' : ''} Found`}
                             </Text>
-                            {sort === 'distance' && userLat !== null && (
+                            {sort === 'distance' && coords !== null && (
                                 <View style={styles.locChip}>
                                     <Navigation2 size={11} color="#fff" strokeWidth={2.5} />
                                     <Text style={styles.locChipText}>Near You</Text>
@@ -809,8 +797,13 @@ export default function ServicesScreen() {
                 sort={sort}
                 minRating={minRating}
                 availability={availability}
-                hasLocation={userLat !== null}
+                hasLocation={coords !== null}
                 onApply={applyFilters}
+            />
+
+            <LocationSelectorModal
+                visible={locationModalVisible}
+                onClose={() => setLocationModalVisible(false)}
             />
         </View>
     );

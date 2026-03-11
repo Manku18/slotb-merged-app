@@ -114,6 +114,38 @@ export default function ProfileScreen() {
     const [editPic, setEditPic] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
+    // Account Deletion State
+    const { sendDeleteAccountOtp, deleteAccount } = useAuth();
+    const [delVisible, setDelVisible] = useState(false);
+    const [delStep, setDelStep] = useState(1);
+    const [delOtp, setDelOtp] = useState('');
+    const [delLoading, setDelLoading] = useState(false);
+
+    const handleDeleteInit = () => {
+        setDelStep(1);
+        setDelOtp('');
+        setDelVisible(true);
+    };
+
+    const sendDelOtp = async () => {
+        if (!user?.email) return;
+        setDelLoading(true);
+        const ok = await sendDeleteAccountOtp(user.email);
+        setDelLoading(false);
+        if (ok) setDelStep(2);
+    };
+
+    const confirmDeletion = async () => {
+        if (!user?.email) return;
+        setDelLoading(true);
+        const ok = await deleteAccount(user.email, delOtp);
+        setDelLoading(false);
+        if (ok) {
+            setDelVisible(false);
+            navigation.reset({ index: 0, routes: [{ name: 'login' as any }] });
+        }
+    };
+
     const checkUnread = useCallback(async () => {
         if (!user?.email) return;
         try {
@@ -433,7 +465,7 @@ export default function ProfileScreen() {
                     </View>
                 </AnimatedSection>
 
-                {/* ── Sign Out ── */}
+                {/* ── Sign Out & Delete ── */}
                 <AnimatedSection delay={420}>
                     <View style={styles.section}>
                         <View style={styles.card}>
@@ -442,12 +474,28 @@ export default function ProfileScreen() {
                                 label="Log Out"
                                 danger
                                 onPress={() => {
-                                    logout();
-                                    navigation.reset({
-                                        index: 0,
-                                        routes: [{ name: 'login' as any }],
-                                    });
+                                    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+                                        { text: 'Cancel', style: 'cancel' },
+                                        {
+                                            text: 'Log Out',
+                                            style: 'destructive',
+                                            onPress: async () => {
+                                                await logout();
+                                                navigation.reset({
+                                                    index: 0,
+                                                    routes: [{ name: 'login' as any }],
+                                                });
+                                            }
+                                        }
+                                    ]);
                                 }}
+                            />
+                            <View style={styles.div} />
+                            <SettingRow
+                                icon={ShieldCheck}
+                                label="Delete Account"
+                                danger
+                                onPress={handleDeleteInit}
                             />
                         </View>
                     </View>
@@ -455,6 +503,60 @@ export default function ProfileScreen() {
 
                 <View style={{ height: 32 }} />
             </ScrollView>
+
+            {/* ── Delete Account Modal ── */}
+            <Modal visible={delVisible} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { paddingBottom: 60 }]}>
+                        <View style={styles.modalHeader}>
+                            <View>
+                                <Text style={[styles.modalTitle, { color: '#ef4444' }]}>Delete Account</Text>
+                                <Text style={styles.modalSub}>Permanently remove your data</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => setDelVisible(false)} disabled={delLoading}>
+                                <X size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {delStep === 1 ? (
+                            <View style={{ gap: 16 }}>
+                                <View style={styles.warningBox}>
+                                    <ShieldCheck size={20} color="#ef4444" />
+                                    <Text style={styles.warningTxt}>This action is irreversible. All your bookings and points will be lost.</Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.saveBtn, { backgroundColor: '#ef4444' }]}
+                                    onPress={sendDelOtp}
+                                    disabled={delLoading}
+                                >
+                                    {delLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnTxt}>Send Verification OTP</Text>}
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View style={{ gap: 16 }}>
+                                <Text style={styles.otpInfo}>A 6-digit code has been sent to {user.email}</Text>
+                                <View style={styles.inputGroup}>
+                                    <TextInput
+                                        style={[styles.input, { textAlign: 'center', fontSize: 24, letterSpacing: 8, height: 60 }]}
+                                        placeholder="000000"
+                                        keyboardType="numeric"
+                                        maxLength={6}
+                                        value={delOtp}
+                                        onChangeText={setDelOtp}
+                                    />
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.saveBtn, { backgroundColor: '#000' }]}
+                                    onPress={confirmDeletion}
+                                    disabled={delLoading || delOtp.length < 6}
+                                >
+                                    {delLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnTxt}>Verify & Delete Permanently</Text>}
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -605,4 +707,10 @@ const styles = StyleSheet.create({
     input: { backgroundColor: '#f8f9fc', borderWidth: 1, borderColor: Colors.border, borderRadius: 12, paddingHorizontal: 16, height: 48, fontSize: 15, color: Colors.text },
     saveBtn: { backgroundColor: Colors.primary, height: 50, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
     saveBtnTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+    // Deletion Modal
+    modalSub: { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
+    warningBox: { backgroundColor: '#fef2f2', padding: 16, borderRadius: 12, flexDirection: 'row', gap: 12, alignItems: 'flex-start', borderWidth: 1, borderColor: '#fee2e2', marginTop: 10 },
+    warningTxt: { flex: 1, fontSize: 13, color: '#991b1b', lineHeight: 18, fontWeight: '500' },
+    otpInfo: { fontSize: 14, color: Colors.text, textAlign: 'center', lineHeight: 20, paddingHorizontal: 20 },
 });

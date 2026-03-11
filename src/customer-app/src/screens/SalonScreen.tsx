@@ -79,9 +79,10 @@ export interface Salon {
     maxTime: number;
     liveToken: number;
     isOpen: boolean;
+    reviews: number;
     price: string;
     tag: string;
-    services: string[];
+    services?: { id: number; title: string; price: string }[];
     address: string;
     phone: string;
     timings: string;
@@ -261,20 +262,14 @@ const RecentCard = ({ item, onBook }: { item: Recent, onBook: (salonId: string, 
 
             {/* Live chips */}
             <View style={styles.badgesRow}>
-                <View style={[styles.liveChip, { backgroundColor: '#F3E8FF' }]}>
-                    <Hash size={10} color="#7C3AED" strokeWidth={2.5} />
-                    <Text style={[styles.liveChipText, { color: '#7C3AED' }]}>
-                        Token #{item.liveToken || 0}
-                    </Text>
-                </View>
-                <View style={[styles.liveChip, { backgroundColor: '#FEE2E2' }]}>
-                    <Timer size={10} color="#DC2626" strokeWidth={2.5} />
+                <View style={[styles.liveChip, { backgroundColor: '#F0FDF4' }]}>
+                    <Timer size={10} color="#16A34A" strokeWidth={2.5} />
                     <Text
-                        style={[styles.liveChipText, { color: '#DC2626' }]}
+                        style={[styles.liveChipText, { color: '#16A34A' }]}
                         numberOfLines={1}
                         adjustsFontSizeToFit
                     >
-                        {getWaitDisplay(item.waitingSlots)}
+                        Wait: {getWaitDisplay(item.waitingSlots)}
                     </Text>
                 </View>
             </View>
@@ -361,133 +356,219 @@ const InstantBookingModal = ({
 
 
 // ------ Details Modal ------------------------------------------------------------------------------------------------------------------------
-const DetailsModal = ({
-    salon,
-    visible,
-    onClose,
-    onBook,
-}: {
-    salon: Salon | null;
-    visible: boolean;
-    onClose: () => void;
-    onBook: (salonId: string, salonName: string) => void;
-}) => {
+const DetailsModal = ({ visible, onClose, salon, onBook }: { visible: boolean; onClose: () => void; salon: Salon; onBook: (sid: string, sname: string, addr: string, initialServices?: any[]) => void }) => {
+    const translateY = useRef(new Animated.Value(0)).current;
+    const [selectedServices, setSelectedServices] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (visible) setSelectedServices([]);
+    }, [visible]);
+
+    const toggleService = (svc: any) => {
+        setSelectedServices(prev => {
+            const exists = prev.find(s => s.id === svc.id);
+            if (exists) return prev.filter(s => s.id !== svc.id);
+            return [...prev, svc];
+        });
+    };
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onMoveShouldSetPanResponder: (_, gestureState) => {
+                return gestureState.dy > 10;
+            },
+            onPanResponderMove: (_, gestureState) => {
+                if (gestureState.dy > 0) {
+                    translateY.setValue(gestureState.dy);
+                }
+            },
+            onPanResponderRelease: (_, gestureState) => {
+                if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+                    Animated.timing(translateY, {
+                        toValue: height,
+                        duration: 200,
+                        useNativeDriver: true,
+                    }).start(onClose);
+                } else {
+                    Animated.spring(translateY, {
+                        toValue: 0,
+                        useNativeDriver: true,
+                    }).start();
+                }
+            },
+        })
+    ).current;
+
+    useEffect(() => {
+        if (visible) {
+            translateY.setValue(0);
+        }
+    }, [visible]);
+
     if (!salon) return null;
+
     return (
-        <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-            <View style={styles.modalRoot}>
-                <StatusBar barStyle="dark-content" />
-                <View style={styles.modalHeader}>
-                    <TouchableOpacity onPress={onClose} style={styles.modalCloseBtn}>
-                        <X size={20} color="#1A1A2E" strokeWidth={2.5} />
-                    </TouchableOpacity>
-                    <Text style={styles.modalTitle}>Salon Details</Text>
-                    <TouchableOpacity style={styles.modalFavBtn}>
-                        <Heart size={20} color="#E91E63" strokeWidth={2} />
-                    </TouchableOpacity>
-                </View>
+        <Modal
+            visible={visible}
+            animationType="slide"
+            presentationStyle="pageSheet"
+            onRequestClose={onClose}
+            transparent={Platform.OS === 'android'}
+        >
+            <Animated.View
+                style={[
+                    styles.modalRoot,
+                    { transform: [{ translateY }] }
+                ]}
+                {...panResponder.panHandlers}
+            >
+                <StatusBar barStyle="light-content" />
+                <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{ paddingBottom: 100 }}>
+                    {/* Hero Section */}
+                    <View style={styles.modalHeroContainer}>
+                        <Image source={{ uri: salon.image }} style={styles.modalHeroImage} resizeMode="cover" />
+                        <LinearGradient colors={['rgba(0,0,0,0.6)', 'transparent']} style={styles.modalHeroOverlay} />
 
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-                    <Image
-                        source={{ uri: salon.image }}
-                        style={styles.modalHeroImage}
-                        resizeMode="cover"
-                    />
-                    {salon.isOpen && (
-                        <View style={styles.modalOpenBadge}>
-                            <Text style={styles.modalOpenText}>OPEN</Text>
-                        </View>
-                    )}
+                        {/* Swipe Handle for Stylist cue */}
+                        <View style={styles.modalSwipeHandle} />
 
-                    <View style={styles.modalBody}>
-                        <View style={styles.modalNameRow}>
-                            <Text style={styles.modalSalonName}>{salon.name}</Text>
-                            {salon.verified && <BadgeCheck size={20} color="#2196F3" fill="#2196F3" />}
-                        </View>
-
-                        <View style={styles.modalRatingRow}>
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <Star key={`star--${i}`} size={14} color="#F59E0B" />
-                            ))}
-                            <Text style={styles.modalRatingText}>{salon.rating} | {salon.distance}</Text>
+                        <View style={[styles.modalHeaderActions, { top: 20 }]}>
+                            <TouchableOpacity onPress={onClose} style={styles.modalTransparentBtn}>
+                                <X size={20} color="#fff" strokeWidth={2.5} />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.modalTransparentBtn}>
+                                <Heart size={20} color="#fff" strokeWidth={2} />
+                            </TouchableOpacity>
                         </View>
 
-                        {/* Live info */}
-                        <View style={styles.liveRow}>
-                            <View style={styles.slotsBadge}>
-                                <CheckCircle2 size={13} color="#fff" strokeWidth={2.5} />
-                                <Text style={styles.slotsBadgeText}>{salon.waitingSlots} Waiting Slots</Text>
+                        {salon.isOpen && (
+                            <View style={styles.modalStatusPill}>
+                                <View style={styles.modalStatusDot} />
+                                <Text style={styles.modalStatusText}>OPEN NOW</Text>
                             </View>
-                            <View style={styles.timeBadge}>
-                                <Timer size={13} color="#fff" strokeWidth={2.5} />
-                                <Text style={styles.timeBadgeText}>Max Time: {salon.maxTime} min</Text>
+                        )}
+                    </View>
+
+                    {/* Content Section */}
+                    <View style={styles.modalContentWrapper}>
+                        <View style={styles.modalMainInfo}>
+                            <View style={styles.modalNameRow}>
+                                <Text style={styles.modalSalonName}>{salon.name}</Text>
+                                {salon.verified && <BadgeCheck size={22} color="#3B82F6" fill="#3B82F6" />}
                             </View>
-                            <View style={styles.tokenBadge}>
-                                <Hash size={13} color="#fff" strokeWidth={2.5} />
-                                <Text style={styles.tokenBadgeText}>Token #{salon.liveToken}</Text>
-                            </View>
-                        </View>
 
-                        <View style={styles.divider} />
-
-                        <View style={styles.detailRow}>
-                            <MapPin size={16} color="#E91E63" />
-                            <Text style={styles.detailText}>{salon.address}</Text>
-                        </View>
-                        <View style={styles.detailRow}>
-                            <Phone size={16} color="#E91E63" />
-                            <Text style={styles.detailText}>{salon.phone}</Text>
-                        </View>
-                        <View style={styles.detailRow}>
-                            <Clock size={16} color="#E91E63" />
-                            <Text style={styles.detailText}>{salon.timings}</Text>
-                        </View>
-
-                        <View style={styles.divider} />
-
-                        <Text style={styles.modalSectionTitle}>Services Offered</Text>
-                        <View style={styles.servicesWrap}>
-                            {salon.services.map((s, i) => (
-                                <View key={i} style={styles.serviceChip}>
-                                    <Scissors size={11} color="#E91E63" />
-                                    <Text style={styles.serviceChipText}>{s}</Text>
+                            <View style={styles.modalMetaRow}>
+                                <View style={styles.modalRatingRow}>
+                                    <Star size={16} color="#F59E0B" fill="#F59E0B" />
+                                    <Text style={styles.modalRatingVal}>{salon.rating}</Text>
+                                    <Text style={styles.modalReviewCount}>({salon.reviews} reviews)</Text>
                                 </View>
-                            ))}
-                        </View>
-
-                        <View style={styles.divider} />
-
-                        <View style={styles.priceRow}>
-                            <View>
-                                <Text style={styles.priceLabel}>Starting From</Text>
-                                <Text style={styles.modalPrice}>{salon.price}</Text>
+                                <View style={styles.modalDotSeparator} />
+                                <Text style={styles.modalDistText}>📍 {salon.distance}</Text>
                             </View>
-                            <TouchableOpacity onPress={() => { onBook(salon.id, salon.name); onClose(); }}>
-                                <LinearGradient
-                                    colors={['#1565C0', '#0D47A1']}
-                                    style={styles.modalBookBtn}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                >
-                                    <Calendar size={18} color="#fff" strokeWidth={2.5} />
-                                    <Text style={styles.modalBookBtnText}>Book My Slot</Text>
-                                </LinearGradient>
+
+                            {/* Quick Stats Bar */}
+                            <View style={styles.modalStatsBar}>
+                                <View style={styles.modalStatItem}>
+                                    <View style={[styles.modalStatIcon, { backgroundColor: '#F0FDF4' }]}>
+                                        <Timer size={18} color="#16A34A" />
+                                    </View>
+                                    <View>
+                                        <Text style={styles.modalStatLabel}>WAITING</Text>
+                                        <Text style={styles.modalStatValue}>{salon.waitingSlots} Slots</Text>
+                                    </View>
+                                </View>
+                                <View style={styles.modalStatDivider} />
+                                <View style={styles.modalStatItem}>
+                                    <View style={[styles.modalStatIcon, { backgroundColor: '#EFF6FF' }]}>
+                                        <Clock size={18} color="#3B82F6" />
+                                    </View>
+                                    <View>
+                                        <Text style={styles.modalStatLabel}>TIMINGS</Text>
+                                        <Text style={styles.modalStatValue}>9AM - 8PM</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* Location Details */}
+                        <View style={styles.modalSection}>
+                            <Text style={styles.modalSectionTitle}>Location</Text>
+                            <TouchableOpacity style={styles.modalLocationCard} activeOpacity={0.7}>
+                                <View style={styles.modalLocIconWrap}>
+                                    <MapPin size={20} color="#E91E63" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.modalAddressText} numberOfLines={2}>{salon.address}</Text>
+                                    <Text style={styles.modalCityText}>Patna, Bihar</Text>
+                                </View>
+                                <ChevronRight size={20} color="#9CA3AF" />
                             </TouchableOpacity>
                         </View>
 
-                        <View style={styles.contactRow}>
-                            <TouchableOpacity style={styles.contactBtn}>
-                                <Phone size={18} color="#1565C0" />
-                                <Text style={styles.contactBtnText}>Call</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.contactBtn}>
-                                <MessageSquare size={18} color="#1565C0" />
-                                <Text style={styles.contactBtnText}>Message</Text>
-                            </TouchableOpacity>
+                        {/* Popular Services Section */}
+                        <View style={styles.modalSection}>
+                            <View style={styles.modalSectionHeader}>
+                                <Text style={styles.modalSectionTitle}>Popular Services</Text>
+                                <Text style={styles.modalRealTimeBadge}>LIVE</Text>
+                            </View>
+                            <View style={styles.modalServicesGrid}>
+                                {salon.services?.map((svc, index) => {
+                                    const isSelected = selectedServices.some(s => s.id === svc.id);
+                                    return (
+                                        <View key={index} style={styles.modalServiceItem}>
+                                            <View style={styles.modalServiceInfo}>
+                                                <Text style={styles.modalServiceTitle}>{svc.title}</Text>
+                                                <Text style={styles.modalServicePrice}>₹{svc.price}</Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                style={[styles.modalAddBtn, isSelected && styles.modalAddedBtn]}
+                                                onPress={() => toggleService(svc)}
+                                            >
+                                                <Text style={[styles.modalAddBtnText, isSelected && styles.modalAddedBtnText]}>
+                                                    {isSelected ? 'Remove' : 'Add'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        </View>
+
+                        {/* About/Bio */}
+                        <View style={styles.modalSection}>
+                            <Text style={styles.modalSectionTitle}>About This Salon</Text>
+                            <Text style={styles.modalAboutText}>
+                                Experience premium grooming services with our expert professionals. We use high-quality products to ensure you get the best look and feel.
+                            </Text>
                         </View>
                     </View>
                 </ScrollView>
-            </View>
+
+                {/* Bottom Booking Bar */}
+                <View style={styles.modalBottomBar}>
+                    <View style={styles.modalPriceInfo}>
+                        <Text style={styles.modalPriceLabel}>Starting from</Text>
+                        <Text style={styles.modalPriceTotal}>{salon.price}</Text>
+                    </View>
+                    <TouchableOpacity
+                        style={styles.modalPrimaryBookBtn}
+                        activeOpacity={0.9}
+                        onPress={() => onBook(salon.id, salon.name, salon.address, selectedServices)}
+                    >
+                        <LinearGradient
+                            colors={['#E91E63', '#C2185B']}
+                            style={styles.modalBookGrad}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                        >
+                            <Text style={styles.modalBookBtnText}>
+                                {selectedServices.length > 0 ? `BOOK ${selectedServices.length} SERVICES` : 'BOOK APPOINTMENT'}
+                            </Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </View>
+            </Animated.View>
         </Modal>
     );
 };
@@ -566,20 +647,14 @@ const SalonCard = ({ salon, userCoords, onDetails, onBook }: { salon: Salon; use
 
                 {/* Frosted live info chips */}
                 <View style={styles.badgesRow}>
-                    <View style={[styles.liveChip, { backgroundColor: '#EFF6FF' }]}>
-                        <Hash size={10} color="#1D4ED8" strokeWidth={2.5} />
-                        <Text style={[styles.liveChipText, { color: '#1D4ED8' }]}>
-                            Token #{salon.liveToken || 0}
-                        </Text>
-                    </View>
-                    <View style={[styles.liveChip, { backgroundColor: '#FEE2E2' }]}>
-                        <Timer size={10} color="#DC2626" strokeWidth={2.5} />
+                    <View style={[styles.liveChip, { backgroundColor: '#F0FDF4' }]}>
+                        <Timer size={10} color="#16A34A" strokeWidth={2.5} />
                         <Text
-                            style={[styles.liveChipText, { color: '#DC2626' }]}
+                            style={[styles.liveChipText, { color: '#16A34A' }]}
                             numberOfLines={1}
                             adjustsFontSizeToFit
                         >
-                            {getWaitDisplay(salon.waitingSlots)}
+                            Wait: {getWaitDisplay(salon.waitingSlots)}
                         </Text>
                     </View>
                 </View>
@@ -600,8 +675,6 @@ const SalonCard = ({ salon, userCoords, onDetails, onBook }: { salon: Salon; use
         </View>
     );
 };
-
-
 // ------ Main Screen ----------------------------------------------------------------------------------------------------------------------------
 export default function SalonScreen() {
     const insets = useSafeAreaInsets();
@@ -624,6 +697,29 @@ export default function SalonScreen() {
     const [recentBookings, setRecentBookings] = useState<any[]>([]);
     const [activeDot, setActiveDot] = useState(0);
     const [searchText, setSearchText] = useState('');
+
+    // -- Distance-based Sorting Logic --
+    const sortedSalons = useMemo(() => {
+        if (!coords || !salons.length) return salons;
+        return [...salons].sort((a, b) => {
+            const distA = a.latitude && a.longitude ?
+                parseFloat(calculateDistance(coords.latitude, coords.longitude, Number(a.latitude), Number(a.longitude)) || '9999') : 9999;
+            const distB = b.latitude && b.longitude ?
+                parseFloat(calculateDistance(coords.latitude, coords.longitude, Number(b.latitude), Number(b.longitude)) || '9999') : 9999;
+            return distA - distB;
+        });
+    }, [salons, coords]);
+
+    const sortedRecents = useMemo(() => {
+        if (!coords || !recentBookings.length) return recentBookings;
+        return [...recentBookings].sort((a, b) => {
+            const distA = a.latitude && a.longitude ?
+                parseFloat(calculateDistance(coords.latitude, coords.longitude, Number(a.latitude), Number(a.longitude)) || '9999') : 9999;
+            const distB = b.latitude && b.longitude ?
+                parseFloat(calculateDistance(coords.latitude, coords.longitude, Number(b.latitude), Number(b.longitude)) || '9999') : 9999;
+            return distA - distB;
+        });
+    }, [recentBookings, coords]);
 
     // -- Scroll-driven header collapse --
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -758,12 +854,17 @@ export default function SalonScreen() {
         }
     }, [route.params, salons]);
 
+    const [initialBookingServices, setInitialBookingServices] = useState<any[]>([]);
+
     // ---- Open Booking Modal ----
-    const handleBooking = (shopId: string, shopName: string, address?: string) => {
+    const handleBooking = (shopId: string, shopName: string, address?: string, initialServices?: any[]) => {
         setBookingShopId(shopId);
         setBookingShopName(shopName);
         setBookingShopAddress(address || '');
+        setInitialBookingServices(initialServices || []);
         setBookingModalVisible(true);
+        // If coming from details modal, it might be open
+        setModalVisible(false);
     };
 
     // -- Header collapse interpolations --
@@ -825,10 +926,11 @@ export default function SalonScreen() {
     const GRAD_H = insets.top + 140;
 
     const baseFiltered = salons.filter(s => {
+        const searchLower = searchText.toLowerCase();
         // Search filter
-        const matchesSearch = s.name.toLowerCase().includes(searchText.toLowerCase()) ||
-            s.address.toLowerCase().includes(searchText.toLowerCase()) ||
-            (s.services && s.services.some(service => service.toLowerCase().includes(searchText.toLowerCase())));
+        const matchesSearch = s.name.toLowerCase().includes(searchLower) ||
+            s.address.toLowerCase().includes(searchLower) ||
+            (s.services && s.services.some(service => service.title.toLowerCase().includes(searchLower)));
 
         // Category filter
         // If "All" (id: '1') is selected, return true. Otherwise check if salon tag or services match category label
@@ -839,7 +941,7 @@ export default function SalonScreen() {
             matchesCategory = (s.tag && s.tag.toLowerCase().includes(catLabel)) ||
                 (catLabel === "men's cut" && s.tag?.toLowerCase().includes("men")) ||
                 (catLabel === "women's" && s.tag?.toLowerCase().includes("women")) ||
-                (s.services && s.services.some(service => service.toLowerCase().includes(catLabel)));
+                (s.services && s.services.some(service => service.title.toLowerCase().includes(catLabel)));
         }
 
         return matchesSearch && matchesCategory;
@@ -847,6 +949,17 @@ export default function SalonScreen() {
 
     const filteredSalons = useMemo(() => {
         let list = [...baseFiltered];
+
+        // 1. Initial sorting: Nearest first (Default)
+        if (coords) {
+            list.sort((a, b) => {
+                const distA = a.latitude && a.longitude ?
+                    parseFloat(calculateDistance(coords.latitude, coords.longitude, Number(a.latitude), Number(a.longitude)) || '9999') : 9999;
+                const distB = b.latitude && b.longitude ?
+                    parseFloat(calculateDistance(coords.latitude, coords.longitude, Number(b.latitude), Number(b.longitude)) || '9999') : 9999;
+                return distA - distB;
+            });
+        }
 
         if (selectedFilters.length > 0) {
             list.sort((a, b) => {
@@ -1162,7 +1275,7 @@ export default function SalonScreen() {
                     snapToAlignment="start"
                     disableIntervalMomentum={true}
                 >
-                    {recentBookings.map((item) => {
+                    {sortedRecents.map((item) => {
                         // Merge with live data if salon exists in main list
                         const liveSalon = salons.find(s => s.id === item.id);
                         const mergedItem = {
@@ -1216,6 +1329,7 @@ export default function SalonScreen() {
                 shopAddress={bookingShopAddress}
                 user={user}
                 navigation={navigation}
+                initialSelectedServices={initialBookingServices}
             />
         </View >
     );
@@ -1498,75 +1612,127 @@ const styles = StyleSheet.create({
     listBookText: { fontSize: 12, fontWeight: '800', color: '#fff' },
 
     // ---- Modal ----------------------------------------------------------------------------------------------------------------------------------
-    modalRoot: { flex: 1, backgroundColor: '#FAFAFA' },
-    modalHeader: {
+    modalRoot: { flex: 1, backgroundColor: '#fff' },
+    modalHeroContainer: { height: height * 0.35, position: 'relative' },
+    modalHeroImage: { width: '100%', height: '100%' },
+    modalHeroOverlay: { ...StyleSheet.absoluteFillObject },
+    modalHeaderActions: {
+        position: 'absolute', left: 20, right: 20,
+        flexDirection: 'row', justifyContent: 'space-between',
+    },
+    modalCircularBtn: {
+        width: 40, height: 40, borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        alignItems: 'center', justifyContent: 'center',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+    },
+    modalStatusPill: {
+        position: 'absolute', bottom: 20, left: 20,
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+    },
+    modalStatusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ADE80' },
+    modalStatusText: { color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+
+    modalContentWrapper: {
+        backgroundColor: '#fff',
+        marginTop: -30,
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        paddingTop: 24,
+    },
+    modalMainInfo: { paddingHorizontal: 20 },
+    modalNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+    modalSalonName: { fontSize: 24, fontWeight: '900', color: '#1A1A2E', letterSpacing: -0.5 },
+    modalMetaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+    modalRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    modalRatingVal: { fontSize: 14, fontWeight: '800', color: '#1A1A2E' },
+    modalReviewCount: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
+    modalDotSeparator: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB', marginHorizontal: 12 },
+    modalDistText: { fontSize: 13, color: '#6B7280', fontWeight: '600' },
+
+    modalStatsBar: {
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: '#F9FAFB',
+        borderRadius: 20, padding: 16,
+        borderWidth: 1, borderColor: '#F3F4F6',
+    },
+    modalStatItem: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+    modalStatIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    modalStatLabel: { fontSize: 9, fontWeight: '800', color: '#9CA3AF', marginBottom: 2 },
+    modalStatValue: { fontSize: 13, fontWeight: '700', color: '#1A1A2E' },
+    modalStatDivider: { width: 1, height: 30, backgroundColor: '#E5E7EB', marginHorizontal: 10 },
+
+    modalSection: { paddingHorizontal: 20, marginTop: 32 },
+    modalSectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+    modalSectionTitle: { fontSize: 17, fontWeight: '800', color: '#1A1A2E' },
+    modalViewAll: { fontSize: 13, fontWeight: '700', color: '#E91E63' },
+
+    modalLocationCard: {
+        flexDirection: 'row', alignItems: 'center', gap: 14,
+        padding: 14, backgroundColor: '#FFF',
+        borderRadius: 18, borderWidth: 1, borderColor: '#F3F4FB',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+    },
+    modalLocIconWrap: { width: 42, height: 42, borderRadius: 12, backgroundColor: '#FEF2F2', alignItems: 'center', justifyContent: 'center' },
+    modalAddressText: { fontSize: 14, color: '#4B5563', lineHeight: 20, fontWeight: '500' },
+    modalCityText: { fontSize: 12, color: '#9CA3AF', marginTop: 2, fontWeight: '600' },
+
+    modalSwipeHandle: {
+        width: 40, height: 5, backgroundColor: 'rgba(255,255,255,0.4)',
+        borderRadius: 3, position: 'absolute', top: 10, alignSelf: 'center', zIndex: 10,
+    },
+    modalTransparentBtn: {
+        width: 42, height: 42, borderRadius: 21,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        alignItems: 'center', justifyContent: 'center',
+    },
+    modalRealTimeBadge: {
+        fontSize: 10, fontWeight: '800', color: '#10B981',
+        backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 4,
+        borderRadius: 6,
+    },
+    modalServicesGrid: { gap: 14 },
+    modalServiceItem: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: 18, paddingTop: Platform.OS === 'ios' ? 56 : 24, paddingBottom: 14,
-        backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
+        backgroundColor: '#F9FAFB', padding: 16, borderRadius: 16,
+        borderWidth: 1, borderColor: '#F3F4F6',
     },
-    modalCloseBtn: {
-        width: 36, height: 36, borderRadius: 18,
-        backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center',
+    modalServiceInfo: { flex: 1, gap: 2 },
+    modalServiceTitle: { fontSize: 15, fontWeight: '700', color: '#1F2937' },
+    modalServicePrice: { fontSize: 14, fontWeight: '800', color: '#10B981', marginTop: 2 },
+    modalAddBtn: {
+        backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB',
+        paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
     },
-    modalTitle: { fontSize: 16, fontWeight: '800', color: '#1A1A2E' },
-    modalFavBtn: {
-        width: 36, height: 36, borderRadius: 18,
-        backgroundColor: '#FFF0F3', alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: '#FECDD3',
+    modalAddBtnText: { fontSize: 13, fontWeight: '800', color: '#1A1A2E' },
+    modalAddedBtn: {
+        backgroundColor: '#E91E63',
+        borderColor: '#E91E63',
     },
-    modalHeroImage: { width: '100%', height: 220 },
-    modalOpenBadge: {
-        position: 'absolute', top: 226, right: 16,
-        backgroundColor: '#10B981', borderRadius: 8,
-        paddingHorizontal: 10, paddingVertical: 4,
+    modalAddedBtnText: {
+        color: '#FFFFFF',
     },
-    modalOpenText: { fontSize: 11, fontWeight: '800', color: '#fff' },
-    modalBody: { paddingHorizontal: 20, paddingTop: 16 },
-    modalNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-    modalSalonName: { fontSize: 22, fontWeight: '900', color: '#1A1A2E', flex: 1 },
-    modalRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 12 },
-    modalRatingText: { fontSize: 13, fontWeight: '600', color: '#6B7280', marginLeft: 6 },
-    liveRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 4 },
-    slotsBadge: {
-        flexDirection: 'row', alignItems: 'center', gap: 5,
-        backgroundColor: '#16A34A', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6,
+
+    modalAboutText: { fontSize: 14, color: '#6B7280', lineHeight: 22, fontWeight: '500' },
+
+    modalBottomBar: {
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        backgroundColor: '#fff', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 34,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        borderTopWidth: 1, borderTopColor: '#F3F4F6',
     },
-    slotsBadgeText: { fontSize: 11, fontWeight: '700', color: '#fff' },
-    timeBadge: {
-        flexDirection: 'row', alignItems: 'center', gap: 5,
-        backgroundColor: '#DC2626', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6,
-    },
-    timeBadgeText: { fontSize: 11, fontWeight: '700', color: '#fff' },
-    tokenBadge: {
-        flexDirection: 'row', alignItems: 'center', gap: 5,
-        backgroundColor: '#1565C0', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6,
-    },
-    tokenBadgeText: { fontSize: 11, fontWeight: '700', color: '#fff' },
-    divider: { height: 1, backgroundColor: '#F3F4F6', marginVertical: 16 },
-    detailRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-    detailText: { fontSize: 13, color: '#374151', flex: 1 },
-    modalSectionTitle: { fontSize: 15, fontWeight: '800', color: '#1A1A2E', marginBottom: 10 },
-    servicesWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    serviceChip: {
-        flexDirection: 'row', alignItems: 'center', gap: 5,
-        backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6,
-    },
-    serviceChipText: { fontSize: 12, color: '#374151', fontWeight: '600' },
-    priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
-    priceLabel: { fontSize: 11, color: '#9CA3AF', marginBottom: 2 },
-    modalPrice: { fontSize: 24, fontWeight: '900', color: '#1565C0' },
-    modalBookBtn: {
-        flexDirection: 'row', alignItems: 'center', gap: 7,
-        borderRadius: 30, paddingHorizontal: 20, paddingVertical: 12,
-    },
-    modalBookBtnText: { fontSize: 14, fontWeight: '800', color: '#fff' },
-    contactRow: { flexDirection: 'row', gap: 12, marginTop: 16 },
-    contactBtn: {
-        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-        borderWidth: 1.5, borderColor: '#1565C0', borderRadius: 30, paddingVertical: 12,
-        backgroundColor: '#EFF6FF',
-    },
-    contactBtnText: { fontSize: 14, fontWeight: '700', color: '#1565C0' },
+    modalPriceInfo: { flex: 0.4 },
+    modalPriceLabel: { fontSize: 11, fontWeight: '600', color: '#9CA3AF', marginBottom: 2 },
+    modalPriceTotal: { fontSize: 20, fontWeight: '800', color: '#1A1A2E' },
+    modalPrimaryBookBtn: { flex: 0.6, height: 54, borderRadius: 16, overflow: 'hidden' },
+    modalBookGrad: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+    modalBookBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
 
     // ---- Instant booking modal styles ------------------------------------------------------------------------------------
     ibOverlay: {

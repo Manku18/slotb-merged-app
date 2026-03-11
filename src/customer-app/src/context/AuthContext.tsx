@@ -29,6 +29,8 @@ interface AuthContextType {
     updateUser: (user: User) => void;
     sendForgotOtp: (email: string) => Promise<boolean>;
     resetPassword: (email: string, otp: string, newPass: string) => Promise<boolean>;
+    sendDeleteAccountOtp: (email: string) => Promise<boolean>;
+    deleteAccount: (email: string, otp: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -42,7 +44,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const loadUser = async () => {
             try {
                 const storedUser = await AsyncStorage.getItem('@user');
-                if (storedUser) setUser(JSON.parse(storedUser));
+                if (storedUser) {
+                    const parsed = JSON.parse(storedUser);
+                    setUser(parsed);
+                }
             } catch (e) {
                 console.error("Failed to load user session", e);
             } finally {
@@ -254,11 +259,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const sendDeleteAccountOtp = async (email: string) => {
+        try {
+            const formData = new FormData();
+            formData.append('action', 'send_delete_account_otp');
+            formData.append('email', email.trim().toLowerCase());
+
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const parsed = await res.json();
+            if (parsed.status === 'ok') {
+                AlertEmitter.show({ type: 'success', title: 'OTP Sent!', message: 'Final verification code sent to your email.' });
+                return true;
+            } else {
+                AlertEmitter.show({ type: 'error', title: 'OTP Error', message: parsed.message || 'Failed to send deletion OTP.' });
+                return false;
+            }
+        } catch (e) {
+            AlertEmitter.show({ type: 'error', title: 'Network Error', message: 'Could not connect to the server.' });
+            return false;
+        }
+    };
+
+    const deleteAccount = async (email: string, otp: string) => {
+        try {
+            const formData = new FormData();
+            formData.append('action', 'verify_otp_and_delete_account');
+            formData.append('email', email.trim().toLowerCase());
+            formData.append('otp', otp);
+
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const parsed = await res.json();
+            if (parsed.status === 'ok') {
+                setUser(null);
+                await AsyncStorage.removeItem('@user');
+                AlertEmitter.show({ type: 'success', title: 'Account Deleted', message: 'Your account has been permanently removed.' });
+                return true;
+            } else {
+                AlertEmitter.show({ type: 'error', title: 'Deletion Failed', message: parsed.message || 'Invalid OTP.' });
+                return false;
+            }
+        } catch (e) {
+            AlertEmitter.show({ type: 'error', title: 'Network Error', message: 'Connection lost during deletion.' });
+            return false;
+        }
+    };
+
     const logout = async () => {
         try {
             const formData = new FormData();
             formData.append('logout', '1');
-            await fetch(API_URL + "?logout=1", { method: 'POST' }); // Using the ?logout=1 query from index.php logout flow
+            await fetch(API_URL + "?logout=1", { method: 'POST' });
         } catch (e) {
             console.error("Logout API call failed", e);
         }
@@ -272,7 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, signup, sendSignupOtp, verifyOtpAndSignup, logout, updateUser, sendForgotOtp, resetPassword }}>
+        <AuthContext.Provider value={{ user, isLoading, login, signup, sendSignupOtp, verifyOtpAndSignup, logout, updateUser, sendForgotOtp, resetPassword, sendDeleteAccountOtp, deleteAccount }}>
             {children}
         </AuthContext.Provider>
     );

@@ -28,8 +28,24 @@ interface Props {
 }
 
 export default function LocationSelectorModal({ visible, onClose }: Props) {
-    const { userLocation, refreshLocation, setDistrict, isLocating } = useLocation();
+    const { userLocation, refreshLocation, setDistrict, isLocating, searchLocations } = useLocation();
     const [searchText, setSearchText] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    React.useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (searchText.length >= 3) {
+                setIsSearching(true);
+                const results = await searchLocations(searchText);
+                setSearchResults(results);
+                setIsSearching(false);
+            } else {
+                setSearchResults([]);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchText]);
 
     const filteredDistricts = BIHAR_DISTRICTS.filter(d =>
         d.toLowerCase().includes(searchText.toLowerCase())
@@ -63,11 +79,12 @@ export default function LocationSelectorModal({ visible, onClose }: Props) {
                         <Search size={18} color="#94A3B8" style={styles.searchIcon} />
                         <TextInput
                             style={styles.searchInput}
-                            placeholder="Search your city or district"
+                            placeholder="Search your area, street or district"
                             placeholderTextColor="#94A3B8"
                             value={searchText}
                             onChangeText={setSearchText}
                         />
+                        {isSearching && <ActivityIndicator size="small" color="#1A73E8" />}
                     </View>
 
                     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -88,6 +105,31 @@ export default function LocationSelectorModal({ visible, onClose }: Props) {
                         </TouchableOpacity>
 
                         <View style={styles.divider} />
+
+                        {/* Search Results */}
+                        {searchResults.length > 0 && (
+                            <>
+                                <Text style={styles.sectionTitle}>Search Results</Text>
+                                {searchResults.map((loc) => (
+                                    <TouchableOpacity
+                                        key={loc.id}
+                                        style={styles.districtItem}
+                                        onPress={() => {
+                                            setDistrict(loc.address, loc.latitude, loc.longitude);
+                                            onClose();
+                                        }}
+                                    >
+                                        <MapPin size={16} color="#1A73E8" />
+                                        <View style={{ flex: 1, marginLeft: 12 }}>
+                                            <Text style={styles.searchResultName} numberOfLines={1}>{loc.name}</Text>
+                                            <Text style={styles.searchResultAddr} numberOfLines={1}>{loc.address}</Text>
+                                        </View>
+                                        <ChevronRight size={14} color="#CBD5E1" />
+                                    </TouchableOpacity>
+                                ))}
+                                <View style={styles.divider} />
+                            </>
+                        )}
 
                         <Text style={styles.sectionTitle}>Popular Districts in Bihar</Text>
 
@@ -261,5 +303,16 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#94A3B8',
         fontWeight: '500',
+    },
+    searchResultName: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#1A1D26',
+    },
+    searchResultAddr: {
+        fontSize: 12,
+        color: '#64748B',
+        fontWeight: '500',
+        marginTop: 2,
     }
 });

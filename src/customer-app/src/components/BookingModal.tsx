@@ -302,9 +302,10 @@ interface BookingModalProps {
     shopAddress: string;
     user: { name: string; email: string } | null;
     navigation: any;
+    initialSelectedServices?: { id: number; title: string; price: number }[];
 }
 
-export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, user, navigation }: BookingModalProps) => {
+export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, user, navigation, initialSelectedServices }: BookingModalProps) => {
     const today = new Date();
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
     const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -317,7 +318,7 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
     const [phone, setPhone] = useState('');
     const [selectedDate, setSelectedDate] = useState<'today' | 'tomorrow'>('today');
     const [services, setServices] = useState<{ id: number; title: string; price: number }[]>([]);
-    const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+    const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
     const [estimatedToken, setEstimatedToken] = useState<number | null>(null);
     const [waitingCount, setWaitingCount] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -328,7 +329,8 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
     const [confirmedService, setConfirmedService] = useState('');
 
     const bookingDate = selectedDate === 'today' ? fmt(today) : fmt(tomorrow);
-    const selectedService = services.find(s => s.id === selectedServiceId) || null;
+    const selectedServiceObjects = services.filter(s => selectedServiceIds.includes(s.id));
+    const totalPrice = selectedServiceObjects.reduce((sum, s) => sum + s.price, 0);
 
     const formatTime = (totalMin: number) => {
         const hrs = Math.floor(totalMin / 60);
@@ -352,10 +354,14 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
             ]).start();
             fetchServices();
             fetchTokenStatus();
+            if (initialSelectedServices && initialSelectedServices.length > 0) {
+                setSelectedServiceIds(initialSelectedServices.map(s => s.id));
+            }
         } else {
             slideAnim.setValue(500); bgAnim.setValue(0);
+            setSelectedServiceIds([]);
         }
-    }, [visible, shopId]);
+    }, [visible, shopId, initialSelectedServices]);
 
     useEffect(() => {
         if (visible && shopId) fetchTokenStatus();
@@ -389,7 +395,7 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
         Animated.parallel([
             Animated.timing(slideAnim, { toValue: 500, duration: 220, useNativeDriver: true }),
             Animated.timing(bgAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
-        ]).start(() => { onClose(); setPhone(''); setSelectedServiceId(null); setSelectedDate('today'); setEstimatedToken(null); setServices([]); });
+        ]).start(() => { onClose(); setPhone(''); setSelectedServiceIds([]); setSelectedDate('today'); setEstimatedToken(null); setServices([]); });
     };
 
     const handleConfirm = async () => {
@@ -407,7 +413,11 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
                 shop_id: shopId, shop_name: shopName,
                 user_email: user.email, user_name: name.trim(), phone: phone.trim(), booking_date: bookingDate,
             };
-            if (selectedServiceId) body.service_id = String(selectedServiceId); else body.service_title = 'General Slot';
+            if (selectedServiceIds.length > 0) {
+                body.service_ids = selectedServiceIds.join(',');
+            } else {
+                body.service_title = 'General Slot';
+            }
             const res = await fetch('https://slotb.in/api_booking.php', {
                 method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams(body).toString(),
@@ -417,7 +427,7 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
             const data = JSON.parse(text.substring(start));
             if (data.status === 'ok') {
                 setConfirmedToken(data.booking.token);
-                setConfirmedService(selectedService?.title || 'General Slot');
+                setConfirmedService(data.booking.service_title || 'General Slot');
                 dismiss();
                 setTimeout(() => setSuccessVisible(true), 350);
             } else {
@@ -501,12 +511,21 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
                             ) : (
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 4, paddingHorizontal: 2 }}>
                                     {[{ id: null, title: 'General', price: 0 }, ...services].map((s: any) => {
-                                        const isActive = selectedServiceId === s.id;
+                                        const isActive = s.id === null ? selectedServiceIds.length === 0 : selectedServiceIds.includes(s.id);
                                         return (
                                             <TouchableOpacity
                                                 key={s.id ?? 'gen'}
                                                 style={[bStyles.svcCard, isActive && bStyles.svcCardActive]}
-                                                onPress={() => setSelectedServiceId(s.id)}
+                                                onPress={() => {
+                                                    if (s.id === null) {
+                                                        setSelectedServiceIds([]);
+                                                    } else {
+                                                        setSelectedServiceIds(prev => {
+                                                            if (prev.includes(s.id)) return prev.filter(id => id !== s.id);
+                                                            return [...prev, s.id];
+                                                        });
+                                                    }
+                                                }}
                                                 activeOpacity={0.8}
                                             >
                                                 {/* Price badge - top, inline */}
@@ -546,7 +565,7 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
                                 <View style={bStyles.statDiv} />
                                 <View style={bStyles.statCell}>
                                     <Text style={bStyles.statIcon}>?</Text>
-                                    <Text style={bStyles.statVal}>{selectedService ? ('₹' + selectedService.price) : 'Free'}</Text>
+                                    <Text style={bStyles.statVal}>{totalPrice > 0 ? ('₹' + totalPrice) : 'Free'}</Text>
                                     <Text style={bStyles.statKey}>Price</Text>
                                 </View>
                             </View>
