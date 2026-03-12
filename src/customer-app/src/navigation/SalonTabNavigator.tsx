@@ -8,6 +8,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, CalendarCheck, Scissors, QrCode, User } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import MyBookingsScreen from '../screens/MyBookingsScreen';
 import SalonScreen from '../screens/SalonScreen';
@@ -31,13 +32,45 @@ const ph = StyleSheet.create({
     sub: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
 });
 
+const s = StyleSheet.create({
+    pillOuter: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1.5,
+        borderColor: 'rgba(243, 244, 246, 0.5)',
+        marginTop: -32,
+    },
+    pillOuterActive: {
+        borderColor: 'rgba(233, 30, 99, 0.2)',
+        shadowColor: ACTIVE_COLOR,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 15,
+    },
+    pillWrap: {
+        width: 62,
+        height: 62,
+        borderRadius: 31,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#fff',
+        elevation: 8,
+    },
+});
+
 // ─── Navigator ────────────────────────────────────────────────────────────────
 const Tab = createBottomTabNavigator() as any;
 
 export default function SalonTabNavigator() {
     return (
         <Tab.Navigator
-            initialRouteName="SalonHome"
+            initialRouteName="ScanQR"
             screenOptions={{
                 headerShown: false,
                 tabBarActiveTintColor: ACTIVE_COLOR,
@@ -78,29 +111,36 @@ export default function SalonTabNavigator() {
                 }}
             />
 
-            {/* 3 — Salon Home (centre pill — active by default) */}
+            {/* 3 — Scan QR (centre pill — active by default) */}
             <Tab.Screen
-                name="SalonHome"
-                component={SalonScreen}
+                name="ScanQR"
+                component={ScanQRScreen}
                 options={{
                     tabBarIcon: ({ focused }: any) => (
-                        <View style={focused ? SALON_ACTIVE_WRAP : SALON_IDLE_WRAP}>
-                            <Scissors
-                                color={focused ? '#fff' : INACTIVE_COLOR}
-                                size={22} strokeWidth={focused ? 2.5 : 1.8}
-                            />
+                        <View style={[s.pillOuter, focused && s.pillOuterActive]}>
+                            <LinearGradient
+                                colors={focused ? ['#FF4B81', '#E91E63'] : ['#FFFFFF', '#F3F4F6']}
+                                style={s.pillWrap}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                            >
+                                <QrCode
+                                    color={focused ? '#fff' : INACTIVE_COLOR}
+                                    size={30} strokeWidth={focused ? 2.8 : 1.8}
+                                />
+                            </LinearGradient>
                         </View>
                     ),
                 }}
             />
 
-            {/* 4 — Scan QR */}
+            {/* 4 — Salon Home */}
             <Tab.Screen
-                name="ScanQR"
-                component={ScanQRScreen}
+                name="SalonHome"
+                component={SalonScreen}
                 options={{
                     tabBarIcon: ({ color, focused }: any) => (
-                        <QrCode color={color} size={24} strokeWidth={focused ? 2.5 : 1.8} />
+                        <Scissors color={color} size={24} strokeWidth={focused ? 2.5 : 1.8} />
                     ),
                 }}
             />

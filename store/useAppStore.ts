@@ -68,6 +68,9 @@ export interface User {
   district?: string;
   state?: string;
   pincode?: string;
+  subscription_end_date?: string;
+  current_plan_id?: string;
+  is_subscription_active?: boolean;
 }
 
 

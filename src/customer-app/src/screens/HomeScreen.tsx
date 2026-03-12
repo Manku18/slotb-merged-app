@@ -40,7 +40,12 @@ import {
     Stethoscope,
     ChevronDown,
     ChevronUp,
+    MapPin,
+    Bell,
+    ShieldCheck,
+    ChevronRight,
 } from 'lucide-react-native';
+import Reanimated, { FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 import { BookingModal } from '../components/BookingModal';
 
 import HomeHeader, { CardColorConfig } from '../components/HomeHeader';
@@ -234,7 +239,31 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 // ── Auto-scroll config ────────────────────────────────────────────────────────
 const AUTO_SCROLL_INTERVAL = 2500; // 2.5 seconds
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
+const FloatingMascot = ({ source, style }: { source: any, style: any }) => {
+    const translateY = useSharedValue(0);
+
+    React.useEffect(() => {
+        translateY.value = withRepeat(
+            withSequence(
+                withTiming(-6, { duration: 2500 }),
+                withTiming(0, { duration: 2500 })
+            ),
+            -1,
+            true
+        );
+    }, []);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: translateY.value }],
+    }));
+
+    return (
+        <Reanimated.View style={[style, animatedStyle]}>
+            <Image source={source} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+        </Reanimated.View>
+    );
+};
+
 export default function HomeScreen() {
     const insets = useSafeAreaInsets();
     const [activeIndex, setActiveIndex] = useState(0);
@@ -424,11 +453,43 @@ export default function HomeScreen() {
                             style={[styles.ctaBtn, { backgroundColor: item.accentColor }]}
                             hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                             onPress={() => {
-                                if (item.id === 'services') navigation.navigate('Services');
+                                if (item.id === 'services') {
+                                    navigation.navigate('coming-soon', {
+                                        title: 'SlotB Home-Service',
+                                        subtitle: 'Electricians, Plumbers & local pros will be available at your doorstep soon!',
+                                        emoji: '🔧',
+                                        primaryColor: '#7C3AFF',
+                                        secondaryColor: '#0A0A1A'
+                                    });
+                                }
                                 else if (item.id === 'salon') navigation.navigate('Salon');
-                                else if (item.id === 'doctor') navigation.navigate('DoctorHomeScreen');
-                                else if (item.id === 'gym') navigation.navigate('Gym');
-                                else if (item.id === 'grocery') navigation.navigate('Grocery');
+                                else if (item.id === 'doctor') {
+                                    navigation.navigate('coming-soon', {
+                                        title: 'SlotB Medical',
+                                        subtitle: 'Booking nearby hospitals & clinics will be live shortly.',
+                                        emoji: '🩺',
+                                        primaryColor: '#14B8A6',
+                                        secondaryColor: '#042F2E'
+                                    });
+                                }
+                                else if (item.id === 'gym') {
+                                    navigation.navigate('coming-soon', {
+                                        title: 'SlotB Gym',
+                                        subtitle: 'Gym booking & memberships are arriving soon.',
+                                        emoji: '🏋️',
+                                        primaryColor: '#FFD740',
+                                        secondaryColor: '#1A1A1A'
+                                    });
+                                }
+                                else if (item.id === 'grocery') {
+                                    navigation.navigate('coming-soon', {
+                                        title: 'SlotB Grocery',
+                                        subtitle: 'Hyperlocal grocery delivery is on its way!',
+                                        emoji: '🛒',
+                                        primaryColor: '#10B981',
+                                        secondaryColor: '#022C22'
+                                    });
+                                }
                             }}
                         >
                             <Text style={[styles.ctaText, { color: item.ctaTextColor }]}>
@@ -541,30 +602,40 @@ export default function HomeScreen() {
                 <View style={styles.section}>
                     <View style={styles.secHeader}>
                         <Text style={styles.secTitle}>Home Service Deals</Text>
-                        <TouchableOpacity activeOpacity={0.7} style={styles.seeAllBtn} onPress={() => navigation.navigate('Services')}>
+                        <TouchableOpacity activeOpacity={0.7} style={styles.seeAllBtn} onPress={() => navigation.navigate('coming-soon', { title: 'Home Services', subtitle: 'On-demand home services are arriving soon!', emoji: '🔧', primaryColor: '#7C3AFF', secondaryColor: '#0A0A1A' })}>
                             <Text style={styles.seeAllText}>View all</Text>
                             <ArrowRight size={13} color="#1565C0" strokeWidth={2.5} />
                         </TouchableOpacity>
                     </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 35, paddingBottom: 15, gap: 16 }}>
                         {[
-                            { title: 'RO Installation', price: '₹299', tag: 'Popular', emoji: '💧' },
-                            { title: 'AC Service & Repair', price: '₹399', tag: 'Summer Deal', emoji: '❄️' },
-                            { title: 'Full Home Cleaning', price: '₹599', tag: 'Best Seller', emoji: '🧹' },
-                            { title: 'Electrician Visit', price: '₹149', tag: 'Instant', emoji: '⚡' },
+                            { title: 'AC Service & Repair', price: '₹9', tag: 'Summer Deal', image: require('../../../../assets/images/monkey_ac_tech_v2.png'), colors: ['#0EA5E9', '#0284C7'] as const },
+                            { title: 'Full Home Cleaning', price: '₹9', tag: 'Best Seller', image: require('../../../../assets/images/monkey_cleaner_v2.png'), colors: ['#10B981', '#059669'] as const },
+                            { title: 'Electrician Visit', price: '₹9', tag: 'Instant', image: require('../../../../assets/images/monkey_electrician_v2.png'), colors: ['#F59E0B', '#D97706'] as const },
                         ].map((s, i) => (
-                            <TouchableOpacity key={i} style={styles.promoCard} activeOpacity={0.85} onPress={() => navigation.navigate('Services')}>
+                            <TouchableOpacity
+                                key={i}
+                                style={styles.promoCard}
+                                activeOpacity={0.85}
+                                onPress={() => navigation.navigate('coming-soon', {
+                                    title: 'SlotB Home-Service',
+                                    subtitle: 'Electricians, Plumbers & local pros will be available at your doorstep soon!',
+                                    emoji: '🔧',
+                                    primaryColor: '#7C3AFF',
+                                    secondaryColor: '#0A0A1A'
+                                })}
+                            >
+                                <FloatingMascot source={s.image} style={styles.promoCardMascotFlying} />
                                 <View style={styles.promoCardTop}>
-                                    <Text style={styles.promoCardEmoji}>{s.emoji}</Text>
-                                    <View style={[styles.promoCardTag, { backgroundColor: '#EFF6FF' }]}>
-                                        <Text style={[styles.promoCardTagTxt, { color: '#1565C0' }]}>{s.tag}</Text>
+                                    <View style={[styles.promoCardTag, { backgroundColor: '#F1F5F9' }]}>
+                                        <Text style={[styles.promoCardTagTxt, { color: '#64748B' }]}>{s.tag}</Text>
                                     </View>
                                 </View>
                                 <Text style={styles.promoCardTitle} numberOfLines={1}>{s.title}</Text>
-                                <Text style={styles.promoCardPrice}>Starting <Text style={styles.promoCardPriceBold}>{s.price}</Text></Text>
-                                <TouchableOpacity style={[styles.promoCardBtn, { backgroundColor: '#1565C0' }]} activeOpacity={0.85}>
+                                <Text style={styles.promoCardPrice}>Book from <Text style={styles.promoCardPriceBold}>{s.price}</Text></Text>
+                                <LinearGradient colors={s.colors} style={styles.promoCardBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
                                     <Text style={styles.promoCardBtnTxt}>Book Now</Text>
-                                </TouchableOpacity>
+                                </LinearGradient>
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
@@ -721,7 +792,7 @@ function FeaturedProviders() {
                 </View>
                 <TouchableOpacity
                     style={fp.seeAllBtn}
-                    onPress={() => navigation.navigate('Services')}
+                    onPress={() => navigation.navigate('coming-soon', { title: 'Service Providers', subtitle: 'Connecting you with the best local pros shortly.', emoji: '✨', primaryColor: '#7C3AFF', secondaryColor: '#4C1D95' })}
                     activeOpacity={0.8}
                 >
                     <Text style={fp.seeAllText}>See All</Text>
@@ -750,7 +821,7 @@ function FeaturedProviderCard({ provider: p }: { provider: FeaturedProvider }) {
         <TouchableOpacity
             style={fp.card}
             activeOpacity={0.92}
-            onPress={() => navigation.navigate('Services')}
+            onPress={() => navigation.navigate('coming-soon', { title: p.name, subtitle: `Book ${p.name} and other experts directly from the app soon!`, emoji: '🔧', primaryColor: '#1D4ED8', secondaryColor: '#1E3A8A' })}
         >
             {/* Fixed-height image area */}
             <View style={fp.imgWrap}>
@@ -788,7 +859,7 @@ function FeaturedProviderCard({ provider: p }: { provider: FeaturedProvider }) {
                 <TouchableOpacity
                     style={fp.bookBtn}
                     activeOpacity={0.85}
-                    onPress={() => navigation.navigate('Services')}
+                    onPress={() => navigation.navigate('coming-soon', { title: p.name, subtitle: `Book ${p.name} and other experts directly from the app soon!`, emoji: '🔧', primaryColor: '#1D4ED8', secondaryColor: '#1E3A8A' })}
                 >
                     <Text style={fp.bookText}>Book Now</Text>
                     <View style={fp.pricePill}>
@@ -1163,41 +1234,57 @@ const styles = StyleSheet.create({
 
     // ── Promo Service Cards (horizontal sliders) ──
     promoCard: {
-        width: 155,
+        width: 160,
         backgroundColor: '#fff',
-        borderRadius: 18,
-        padding: 14,
-        gap: 6,
-        elevation: 4,
-        shadowColor: '#94A3B8',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
+        borderRadius: 24,
+        padding: 12,
+        paddingTop: 50, // More top padding for the zoomed mascot
+        gap: 8,
+        elevation: 12,
+        shadowColor: '#1E293B',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.18,
+        shadowRadius: 12,
+        borderWidth: 1,
+        borderColor: '#F1F5F9',
+        overflow: 'visible',
     },
     promoCardTop: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-end',
+        marginBottom: 2,
     },
-    promoCardEmoji: { fontSize: 28 },
+    promoCardMascotFlying: {
+        position: 'absolute',
+        top: -42, // Adjusted down from -48
+        left: -8, // Keeping the horizontal alignment
+        width: 110,
+        height: 110,
+        zIndex: 10,
+    },
     promoCardTag: {
         paddingHorizontal: 8,
         paddingVertical: 3,
-        borderRadius: 999,
+        borderRadius: 8,
     },
-    promoCardTagTxt: { fontSize: 9, fontWeight: '700', letterSpacing: 0.2 },
-    promoCardTitle: { fontSize: 13, fontWeight: '800', color: '#1E293B' },
-    promoCardPrice: { fontSize: 11, color: '#64748B', fontWeight: '500' },
-    promoCardPriceBold: { fontWeight: '900', color: '#1E293B', fontSize: 13 },
+    promoCardTagTxt: { fontSize: 8, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
+    promoCardTitle: { fontSize: 13, fontWeight: '900', color: '#0F172A', marginTop: 4 },
+    promoCardPrice: { fontSize: 11, color: '#64748B', fontWeight: '600' },
+    promoCardPriceBold: { fontWeight: '900', color: '#0F172A', fontSize: 14 },
     promoCardBtn: {
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 10,
-        marginTop: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 16,
+        marginTop: 6,
         alignSelf: 'stretch',
         alignItems: 'center',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 4,
     },
-    promoCardBtnTxt: { fontSize: 11, fontWeight: '800', color: '#fff' },
+    promoCardBtnTxt: { fontSize: 11, fontWeight: '900', color: '#fff', letterSpacing: 0.5, textTransform: 'uppercase' },
 
     // ── Top Salons Near You ──
     seeAllCircle: {

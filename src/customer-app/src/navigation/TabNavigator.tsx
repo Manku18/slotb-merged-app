@@ -28,6 +28,7 @@ import {
     Home, Wrench, Scissors, Dumbbell,
     User, CalendarCheck, QrCode, ShoppingBag,
 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import HomeScreen from '../screens/HomeScreen';
 import SalonScreen from '../screens/SalonScreen';
@@ -41,6 +42,8 @@ import GymHomeScreen from '../screens/GymHomeScreen';
 import GroceryHomeScreen from '../screens/GroceryHomeScreen';
 import MyBookingsScreen from '../screens/MyBookingsScreen';
 import ScanQRScreen from '../screens/ScanQRScreen';
+import PrivacyScreen from '../screens/PrivacyScreen';
+import HelpCentreScreen from '../screens/HelpCentreScreen';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const ACTIVE = '#E91E63';
@@ -52,7 +55,7 @@ const SALON_ROUTES = new Set(['Salon', 'MyBookings', 'ScanQR']);
 const GROCERY_ROUTES = new Set(['Grocery']);
 
 // ─── Tab descriptors ──────────────────────────────────────────────────────────
-type TabItem = { target: string; Icon: any; label: string; activeColor?: string };
+type TabItem = { target: string; Icon: any; label: string; activeColor?: string; isPill?: boolean };
 
 const HOME_ITEMS: TabItem[] = [
     { target: 'Home', Icon: Home, label: 'Home' },
@@ -65,8 +68,8 @@ const HOME_ITEMS: TabItem[] = [
 const SALON_ITEMS: TabItem[] = [
     { target: 'Home', Icon: Home, label: 'Home' },
     { target: 'MyBookings', Icon: CalendarCheck, label: 'Bookings' },
+    { target: 'ScanQR', Icon: QrCode, label: 'Scan QR', isPill: true },
     { target: 'Salon', Icon: Scissors, label: 'Salon' },
-    { target: 'ScanQR', Icon: QrCode, label: 'Scan QR' },
     { target: 'Profile', Icon: User, label: 'Profile' },
 ];
 
@@ -98,16 +101,61 @@ function CustomTabBar({ state, navigation }: any) {
                 return (
                     <TouchableOpacity
                         key={idx}
-                        onPress={() => navigation.navigate(item.target)}
+                        onPress={() => {
+                            if (item.target === 'Services') {
+                                navigation.navigate('coming-soon', {
+                                    title: 'Home Services',
+                                    subtitle: 'On-demand home services are arriving soon!',
+                                    emoji: '🔧',
+                                    primaryColor: '#7C3AFF',
+                                    secondaryColor: '#0A0A1A'
+                                });
+                            } else if (item.target === 'Gym') {
+                                navigation.navigate('coming-soon', {
+                                    title: 'SlotB Gym',
+                                    subtitle: 'Gym booking & memberships are arriving soon.',
+                                    emoji: '🏋️',
+                                    primaryColor: '#FFD740',
+                                    secondaryColor: '#1A1A1A'
+                                });
+                            } else if (item.target === 'Grocery') {
+                                navigation.navigate('coming-soon', {
+                                    title: 'SlotB Grocery',
+                                    subtitle: 'Hyperlocal grocery delivery is on its way!',
+                                    emoji: '🛒',
+                                    primaryColor: '#10B981',
+                                    secondaryColor: '#022C22'
+                                });
+                            } else {
+                                navigation.navigate(item.target);
+                            }
+                        }}
                         activeOpacity={0.7}
-                        style={s.tab}
+                        style={[s.tab, item.isPill && s.pillTab]}
                     >
-                        <item.Icon
-                            color={color}
-                            size={22}
-                            strokeWidth={isActive ? 2.4 : 1.8}
-                        />
-                        <Text style={[s.label, { color }]}>{item.label}</Text>
+                        {item.isPill ? (
+                            <View style={[s.pillOuter, isActive && s.pillOuterActive]}>
+                                <LinearGradient
+                                    colors={isActive ? ['#FF4B81', '#E91E63'] : ['#FFFFFF', '#F3F4F6']}
+                                    style={s.pillWrap}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                >
+                                    <item.Icon
+                                        color={isActive ? '#fff' : color}
+                                        size={30}
+                                        strokeWidth={2.8}
+                                    />
+                                </LinearGradient>
+                            </View>
+                        ) : (
+                            <item.Icon
+                                color={color}
+                                size={22}
+                                strokeWidth={isActive ? 2.4 : 1.8}
+                            />
+                        )}
+                        {!item.isPill && <Text style={[s.label, { color }]}>{item.label}</Text>}
                     </TouchableOpacity>
                 );
             })}
@@ -184,7 +232,17 @@ export default function TabNavigator() {
             }
         });
 
-        return () => sub.remove();
+        // Listen for visibility changes and auto-hide after 2s if it appears
+        const visibilitySub = NavigationBar.addVisibilityListener(({ visibility }) => {
+            if (visibility === 'visible') {
+                setTimeout(hideSystemNav, 2000);
+            }
+        });
+
+        return () => {
+            sub.remove();
+            visibilitySub.remove();
+        };
     }, []);
 
     return (
@@ -213,6 +271,16 @@ export default function TabNavigator() {
             <Stack.Screen
                 name="GroceryHomeScreen"
                 component={GroceryHomeScreen}
+                options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name="Privacy"
+                component={PrivacyScreen}
+                options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name="HelpCentre"
+                component={HelpCentreScreen}
                 options={{ animation: 'slide_from_right' }}
             />
         </Stack.Navigator>
@@ -248,5 +316,36 @@ const s = StyleSheet.create({
         fontSize: 10,
         fontWeight: '600',
         marginTop: 2,
+    },
+    pillTab: {
+        marginTop: -32,
+    },
+    pillOuter: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1.5,
+        borderColor: 'rgba(243, 244, 246, 0.5)',
+    },
+    pillOuterActive: {
+        borderColor: 'rgba(233, 30, 99, 0.2)',
+        shadowColor: ACTIVE,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 15,
+    },
+    pillWrap: {
+        width: 62,
+        height: 62,
+        borderRadius: 31,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#fff',
+        elevation: 8,
     },
 });

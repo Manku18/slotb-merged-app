@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, Alert, ActivityIndicator, Modal, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { ComingSoonModal } from '../../components/ui/ComingSoonModal';
@@ -16,6 +16,13 @@ export default function SettingsScreen() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalConfig, setModalConfig] = useState({ title: '', message: '', icon: '', gradient: ['#4F46E5', '#818CF8'] });
+
+  // Account Deletion States
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteOtp, setDeleteOtp] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<'confirm' | 'otp'>('confirm');
+  const [loading, setLoading] = useState(false);
 
   const handlePress = (label: string) => {
     setModalConfig({
@@ -33,6 +40,49 @@ export default function SettingsScreen() {
     logout();
     // Navigate back to login
     router.replace('/login');
+  };
+
+  const handleDeleteRequest = async () => {
+    if (!user?.email) {
+      Alert.alert('Error', 'No email associated with this account');
+      return;
+    }
+    setDeleteOtp(''); // Clear previous OTP
+    setLoading(true);
+    const { authService } = require('@/services/api');
+    try {
+      const res = await authService.sendDeleteAccountOTP(user.email);
+      if (res.status === 'success') {
+        setDeleteStep('otp');
+      } else {
+        Alert.alert('Error', res.message || 'Could not send OTP');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Connection failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!user?.email || !deleteOtp) return;
+    setIsDeleting(true);
+    const { authService } = require('@/services/api');
+    try {
+      const res = await authService.verifyDeleteAccount(user.email, deleteOtp);
+      if (res.status === 'success') {
+        setDeleteModalVisible(false);
+        Alert.alert('Account Deleted', 'Your account has been permanently removed. We are sorry to see you go.', [
+          { text: 'OK', onPress: () => logout() }
+        ]);
+      } else {
+        Alert.alert('Verification Failed', res.message || 'Invalid OTP');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Could not delete account');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const SettingItem = ({ icon, label, isDestructive = false, onPress }: { icon: any, label: string, isDestructive?: boolean, onPress?: () => void }) => (
@@ -111,8 +161,96 @@ export default function SettingsScreen() {
           />
           <View style={[styles.divider, { backgroundColor: colors.background }]} />
           <SettingItem icon="log-out-outline" label="Log Out" isDestructive onPress={handleLogout} />
+          <View style={[styles.divider, { backgroundColor: colors.background }]} />
+          <SettingItem icon="trash-outline" label="Delete Account" isDestructive onPress={() => setDeleteModalVisible(true)} />
         </GlassCard>
       </ScrollView>
+
+      {/* Deletion Modal */}
+      <Modal
+        transparent
+        visible={deleteModalVisible}
+        animationType="fade"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => !isDeleting && setDeleteModalVisible(false)}
+        >
+          <GlassCard style={styles.modalContent}>
+            <View style={[styles.modalIcon, { backgroundColor: '#fee2e2' }]}>
+              <Ionicons name="warning" size={32} color="#ef4444" />
+            </View>
+
+            {deleteStep === 'confirm' ? (
+              <>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Delete Account?</Text>
+                <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
+                  This action is permanent. All your shop profile, bookings, and customer data will be wiped out forever.
+                </Text>
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    onPress={() => setDeleteModalVisible(false)}
+                    style={[styles.modalBtn, { backgroundColor: colors.surfaceHighlight }]}
+                  >
+                    <Text style={[styles.modalBtnText, { color: colors.textPrimary }]}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleDeleteRequest}
+                    disabled={loading}
+                    style={[styles.modalBtn, { backgroundColor: '#ef4444' }]}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#FFF" size="small" />
+                    ) : (
+                      <Text style={[styles.modalBtnText, { color: '#FFF' }]}>Confirm & Send OTP</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Enter Verification OTP</Text>
+                <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
+                  We've sent a 6-digit code to <Text style={{ fontWeight: '700' }}>{user?.email}</Text>. Enter it below to delete your account.
+                </Text>
+                <Text style={[styles.spamTip, { color: colors.primary }]}>
+                  Tip: Check your spam folder if you can't see the OTP in your primary inbox.
+                </Text>
+                <TextInput
+                  style={[styles.otpInput, { color: colors.textPrimary, borderColor: colors.border }]}
+                  placeholder="000000"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  value={deleteOtp}
+                  onChangeText={setDeleteOtp}
+                />
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    onPress={() => setDeleteStep('confirm')}
+                    disabled={isDeleting}
+                    style={[styles.modalBtn, { backgroundColor: colors.surfaceHighlight }]}
+                  >
+                    <Text style={[styles.modalBtnText, { color: colors.textPrimary }]}>Back</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleConfirmDelete}
+                    disabled={isDeleting || deleteOtp.length < 6}
+                    style={[styles.modalBtn, { backgroundColor: '#ef4444', opacity: (isDeleting || deleteOtp.length < 6) ? 0.6 : 1 }]}
+                  >
+                    {isDeleting ? (
+                      <ActivityIndicator color="#FFF" size="small" />
+                    ) : (
+                      <Text style={[styles.modalBtnText, { color: '#FFF' }]}>Verify & Delete</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </GlassCard>
+        </Pressable>
+      </Modal>
       <ComingSoonModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
@@ -226,4 +364,70 @@ const styles = StyleSheet.create({
     height: 1,
     marginLeft: 60,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    padding: 24,
+    alignItems: 'center',
+  },
+  modalIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalDesc: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+    paddingHorizontal: 10,
+  },
+  spamTip: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 24,
+    fontWeight: '600',
+    paddingHorizontal: 15,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  otpInput: {
+    width: '100%',
+    height: 56,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 8,
+    marginBottom: 24,
+  }
 });

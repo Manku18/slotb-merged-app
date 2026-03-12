@@ -129,6 +129,12 @@ export function TokenCard({ token, onUpdateStatus, onPressCard }: TokenCardProps
                     <View style={styles.historyLeft}>
                         <Text style={[styles.historyToken, { color: statusColor }]}>#{token.tokenNumber}</Text>
                         <Text style={[styles.historyName, { color: colors.textPrimary }]}>{token.customerName}</Text>
+                        {token.paymentStatus === 'paid' && (
+                            <View style={styles.paymentBadgeSmall}>
+                                <Ionicons name="card" size={10} color="#059669" />
+                                <Text style={styles.paymentTextSmall}>FEE PAID</Text>
+                            </View>
+                        )}
                     </View>
                     <Text style={[styles.historyStatus, { color: statusColor }]}>{token.status.toUpperCase()}</Text>
                 </View>
@@ -175,6 +181,12 @@ export function TokenCard({ token, onUpdateStatus, onPressCard }: TokenCardProps
                                     <Ionicons name="time-outline" size={12} color={colors.textSecondary} />
                                     <Text style={[styles.timeText, { color: colors.textSecondary }]}>{token.time}</Text>
                                 </View>
+                                {token.paymentStatus === 'paid' && (
+                                    <View style={styles.paymentBadge}>
+                                        <Ionicons name="checkmark-circle" size={12} color="#059669" />
+                                        <Text style={styles.paymentText}>FEE PAID</Text>
+                                    </View>
+                                )}
                             </View>
                             <Text style={[styles.serviceText, { color: colors.textSecondary }]} numberOfLines={1}>{token.service}</Text>
                         </View>
@@ -454,4 +466,34 @@ const styles = StyleSheet.create({
     modalActions: { flexDirection: 'row', gap: 16, width: '100%' },
     modalBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
     modalBtnText: { fontWeight: '700', fontSize: 15 },
+    paymentBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#D1FAE5',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
+        marginLeft: 8,
+    },
+    paymentText: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: '#059669',
+    },
+    paymentBadgeSmall: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 2,
+        backgroundColor: '#D1FAE5',
+        paddingHorizontal: 4,
+        paddingVertical: 1,
+        borderRadius: 4,
+        marginLeft: 4,
+    },
+    paymentTextSmall: {
+        fontSize: 8,
+        fontWeight: '800',
+        color: '#059669',
+    },
 });

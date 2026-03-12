@@ -19,23 +19,33 @@ export const TAB_BAR_STYLE = {
 } as const;
 
 export const SALON_ACTIVE_WRAP = {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: ACTIVE_COLOR,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     shadowColor: ACTIVE_COLOR,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 12,
+    borderWidth: 2,
+    borderColor: '#fff',
 };
 
 export const SALON_IDLE_WRAP = {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+    backgroundColor: '#fff',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    borderWidth: 2,
+    borderColor: '#F3F4F6',
 };

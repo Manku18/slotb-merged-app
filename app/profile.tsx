@@ -16,7 +16,9 @@ import {
     View,
     Alert,
     ActivityIndicator,
-    SafeAreaView
+    SafeAreaView,
+    Modal,
+    Pressable
 } from 'react-native';
 import { Image } from 'expo-image';
 // import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,13 +26,14 @@ import { Image } from 'expo-image';
 export default function ProfileScreen() {
     const { colors } = useTheme();
     const router = useRouter();
-    const { user, login, authKey, settings, updateSettings } = useAppStore();
+    const { user, login, logout, authKey, settings, updateSettings } = useAppStore();
 
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(user?.name || '');
     const [shopName, setShopName] = useState(user?.shopName || '');
     const [upiId, setUpiId] = useState(user?.upiId || '');
     const [loading, setLoading] = useState(false);
+
 
     // Image states (base64)
     const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -109,6 +112,7 @@ export default function ProfileScreen() {
             setLoading(false);
         }
     };
+
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -255,11 +259,13 @@ export default function ProfileScreen() {
                     </View>
                 </GlassCard>
 
+
                 {/* Shop Service (Editable) */}
                 <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24 }]}>SHOP SERVICES</Text>
                 <ServiceManagementCard />
 
             </ScrollView>
+
         </SafeAreaView>
     );
 }
@@ -479,4 +485,77 @@ const styles = StyleSheet.create({
         fontSize: 12,
         marginTop: 2,
     },
+    deleteBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        marginBottom: 24,
+    },
+    deleteSubtext: {
+        fontSize: 11,
+        marginTop: 2,
+        opacity: 0.8,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        width: '100%',
+        padding: 24,
+        alignItems: 'center',
+    },
+    modalIcon: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    modalDesc: {
+        fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 24,
+        paddingHorizontal: 10,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    modalBtn: {
+        flex: 1,
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalBtnText: {
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    otpInput: {
+        width: '100%',
+        height: 56,
+        borderWidth: 1.5,
+        borderRadius: 12,
+        textAlign: 'center',
+        fontSize: 24,
+        fontWeight: '800',
+        letterSpacing: 8,
+        marginBottom: 24,
+    }
 });

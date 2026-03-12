@@ -1,4 +1,6 @@
 import axios from 'axios';
+import * as WebBrowser from 'expo-web-browser';
+import { Linking } from 'react-native';
 import { Token } from '@/components/tokens/token.types';
 import { DashboardStats, EarningsEntry, Partner } from '@/store/useAppStore';
 
@@ -110,6 +112,33 @@ export const authService = {
       console.error("Reset Password Error:", error);
       throw error;
     }
+  },
+
+  async sendDeleteAccountOTP(email: string) {
+    try {
+      const response = await api.post('', {
+        action: 'send_delete_account_otp',
+        email
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Send Delete OTP Error:", error);
+      throw error;
+    }
+  },
+
+  async verifyDeleteAccount(email: string, otp: string) {
+    try {
+      const response = await api.post('', {
+        action: 'verify_delete_account_otp',
+        email,
+        otp
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Verify Delete Error:", error);
+      throw error;
+    }
   }
 };
 
@@ -213,7 +242,9 @@ export const apiService = {
             status: b.status === 'served' ? 'completed' : b.status,
             time: timeStr,
             mobileNumber: b.phone,
-            createdAt: createdTimestamp
+            createdAt: createdTimestamp,
+            paymentStatus: b.payment_status,
+            razorpayPaymentId: b.razorpay_payment_id
           };
         }),
         shop: data.shop,
@@ -478,11 +509,31 @@ export const apiService = {
   },
 
   async updatePlan(planId: string, shopId: string): Promise<boolean> {
-    // Mock API call
-    console.log(`Updating plan to ${planId} for shop ${shopId}`);
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(true), 1000);
-    });
+    const paymentUrl = `${API_BASE_URL.replace('shop_api.php', 'partner_payment.php')}?shop_id=${shopId}&plan_id=${planId}`;
+    console.log("Opening Partner Payment URL:", paymentUrl);
+
+    try {
+      // 1. Try Expo WebBrowser (In-app)
+      const result = await WebBrowser.openBrowserAsync(paymentUrl);
+
+      // If the browser was closed/cancelled, or if it failed to open, 
+      // we can try a fallback to the system browser just in case.
+      if (result.type === 'cancel' || !result) {
+        console.log("WebBrowser cancelled or failed, trying Linking fallback...");
+        await Linking.openURL(paymentUrl);
+      }
+      return true;
+    } catch (error) {
+      console.error("Failed to open payment browser", error);
+      // 2. Final Fallback: System Browser
+      try {
+        await Linking.openURL(paymentUrl);
+        return true;
+      } catch (linkError) {
+        console.error("Linking fallback also failed", linkError);
+        return false;
+      }
+    }
   },
 
   async getRanking(shopId: string, period: string, scope: 'global' | 'state' | '15km' | '60km', userLocation?: { lat: number, lon: number, state: string }): Promise<any> {
@@ -523,6 +574,30 @@ export const apiService = {
     } catch (e) {
       console.error("Save Push Token Error", e);
       return false;
+    }
+  },
+  async createRazorpayOrder(shopId: string): Promise<any> {
+    try {
+      const response = await api.post('', {
+        action: 'razorpay_create_order',
+        shop_id: shopId
+      });
+      return response.data;
+    } catch (e) {
+      console.error("Create Order Error", e);
+      return { status: 'error', message: 'Connection failed' };
+    }
+  },
+  async verifyRazorpayPayment(data: { shop_id: string, razorpay_order_id: string, razorpay_payment_id: string, razorpay_signature: string }): Promise<any> {
+    try {
+      const response = await api.post('', {
+        action: 'razorpay_verify_payment',
+        ...data
+      });
+      return response.data;
+    } catch (e) {
+      console.error("Verify Payment Error", e);
+      return { status: 'error', message: 'Connection failed' };
     }
   }
 };

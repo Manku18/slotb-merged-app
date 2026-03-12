@@ -9,6 +9,8 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as SplashScreen from 'expo-splash-screen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -20,9 +22,10 @@ LogBox.ignoreLogs([
   'expo-notifications: Android Push notifications (remote notifications) functionality',
 ]);
 
-import { SlotBColors } from '@/constants/theme';
+import { SlotBColors, SlotBColorsDark, SlotBColorsLight } from '@/constants/theme';
 import { useAppStore } from '@/store/useAppStore';
 import { usePushNotifications } from '@/hooks/usePushNotifications'; // Import Hook
+import { useTheme } from '@/hooks/useTheme';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { apiService } from '@/services/api';
 import LoadingScreen from '@/components/ui/LoadingScreen';
@@ -154,12 +157,14 @@ const RootLayoutNav = () => {
     }
   }, []);
 
+  const { colors, isDarkMode } = useTheme();
+
   if (!isHydrated) {
     return <LoadingScreen />;
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#000000' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Stack>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="signup" options={{ headerShown: false }} />
@@ -177,6 +182,7 @@ const RootLayoutNav = () => {
         <Stack.Screen name="payment-qr" options={{ headerShown: false }} />
         <Stack.Screen name="privacy" options={{ headerShown: false }} />
         <Stack.Screen name="help" options={{ headerShown: false }} />
+        <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
       </Stack>
 
       {/* Maintenance Overlay */}
@@ -293,22 +299,23 @@ const styles = StyleSheet.create({
   }
 });
 
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-
 export default function RootLayout() {
-  const { expoPushToken, notification } = usePushNotifications(); // Init Push Logic
-  // Optionally console log token for debugging or send to backend here if hook doesn't (hook logs it)
+  const isDarkMode = useAppStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? SlotBColorsDark : SlotBColorsLight;
+  const { expoPushToken, notification } = usePushNotifications();
 
   return (
     <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: themeColors.background }}>
+        <StatusBar
+          style={isDarkMode ? 'light' : 'dark'}
+          backgroundColor="transparent"
+          translucent={true}
+        />
         <LocationProvider>
           <AuthProvider>
             <ThemeProvider value={customLightTheme}>
               <RootLayoutNav />
-              {/* Status Bar: Light content for black background */}
-              <StatusBar style="light" />
             </ThemeProvider>
           </AuthProvider>
         </LocationProvider>

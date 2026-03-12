@@ -63,7 +63,13 @@ export default function UniversalSearchModal({ visible, onClose }: Props) {
         if (type === 'salon') {
             navigation.navigate('Salon', { search: item.name });
         } else {
-            navigation.navigate('Services', { search: item.name });
+            navigation.navigate('coming-soon', {
+                title: item.name,
+                subtitle: `${item.name} and other ${item.category} experts will be available for booking soon!`,
+                emoji: '🔧',
+                primaryColor: '#1D4ED8',
+                secondaryColor: '#1E3A8A'
+            });
         }
     };
 

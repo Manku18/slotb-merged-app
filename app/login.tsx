@@ -113,6 +113,8 @@ export default function LoginScreen() {
             id: shop.id.toString(),
             name: shop.owner_name,
             shopName: shop.shop_name,
+            email: shop.email,
+            phone: shop.phone,
             qrCode: shop.qr_code,
             upiId: shop.upi_id,
           }, authKey);

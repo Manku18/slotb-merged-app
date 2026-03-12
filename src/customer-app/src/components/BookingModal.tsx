@@ -15,6 +15,7 @@ import {
     Easing,
     Platform,
 } from 'react-native';
+import RazorpayCheckout from 'react-native-razorpay';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
     Calendar,
@@ -407,24 +408,73 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
         }
         if (!name.trim()) { Alert.alert('Required', 'Enter your name'); return; }
         if (!/^\d{10}$/.test(phone.trim())) { Alert.alert('Invalid', 'Enter a valid 10-digit phone'); return; }
+
         setIsSubmitting(true);
         try {
-            const body: Record<string, string> = {
-                shop_id: shopId, shop_name: shopName,
-                user_email: user.email, user_name: name.trim(), phone: phone.trim(), booking_date: bookingDate,
+            // 1. Create Razorpay Order for ₹2 Booking Fee
+            const orderRes = await fetch('https://slotb.in/api_booking.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ action: 'create_payment_order' }).toString(),
+            });
+            const orderText = await orderRes.text();
+            const orderJsonStart = orderText.indexOf('{');
+            if (orderJsonStart < 0) throw new Error('Failed to create payment order');
+            const orderData = JSON.parse(orderText.substring(orderJsonStart));
+
+            if (orderData.status !== 'ok') {
+                throw new Error(orderData.message || 'Payment initiation failed');
+            }
+
+            // 2. Open Razorpay Checkout
+            const options = {
+                description: 'SlotB Booking Fee',
+                image: 'https://slotb.in/favicon.png', // Fallback icon
+                currency: 'INR',
+                key: 'rzp_live_SQ4FojmDPwm6on', // Razorpay Key ID
+                amount: orderData.order.amount,
+                name: 'SlotB India',
+                order_id: orderData.order.id,
+                prefill: {
+                    email: user.email,
+                    contact: phone.trim(),
+                    name: name.trim()
+                },
+                theme: { color: '#7C3AED' }
             };
+
+            const paymentData = await RazorpayCheckout.open(options);
+
+            // 3. Complete Booking with Payment Details
+            const body: Record<string, string> = {
+                shop_id: shopId,
+                shop_name: shopName,
+                user_email: user.email,
+                user_name: name.trim(),
+                phone: phone.trim(),
+                booking_date: bookingDate,
+                razorpay_payment_id: paymentData.razorpay_payment_id,
+                razorpay_order_id: paymentData.razorpay_order_id,
+                razorpay_signature: paymentData.razorpay_signature
+            };
+
             if (selectedServiceIds.length > 0) {
                 body.service_ids = selectedServiceIds.join(',');
             } else {
                 body.service_title = 'General Slot';
             }
+
             const res = await fetch('https://slotb.in/api_booking.php', {
-                method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams(body).toString(),
             });
-            const text = await res.text(); const start = text.indexOf('{');
-            if (start < 0) throw new Error('Bad response');
+
+            const text = await res.text();
+            const start = text.indexOf('{');
+            if (start < 0) throw new Error('Bad response from server');
             const data = JSON.parse(text.substring(start));
+
             if (data.status === 'ok') {
                 setConfirmedToken(data.booking.token);
                 setConfirmedService(data.booking.service_title || 'General Slot');
@@ -433,7 +483,14 @@ export const BookingModal = ({ visible, onClose, shopId, shopName, shopAddress, 
             } else {
                 Alert.alert('Booking Failed', data.message || 'Something went wrong.');
             }
-        } catch (e: any) { Alert.alert('Error', e.message); }
+        } catch (e: any) {
+            if (e.code === 2) {
+                // User cancelled payment
+                console.log('Payment cancelled by user');
+            } else {
+                Alert.alert('Error', e.message || 'Payment or Booking failed');
+            }
+        }
         finally { setIsSubmitting(false); }
     };
 

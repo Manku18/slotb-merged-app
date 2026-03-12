@@ -1,8 +1,12 @@
 {
   "expo": {
     "name": "SlotB",
-    "slug": "SlotB-Merged-App",
-    "version": "1.0.4",
+    "slug": "SlotB-Partner-demo",
+    "version": "2.2",
+    "runtimeVersion": "2.2.0",
+    "updates": {
+      "url": "https://u.expo.dev/f6e2691d-dcbd-4ae5-bbe4-5c8d56464ba2"
+    },
     "orientation": "portrait",
     "backgroundColor": "#000000",
     "icon": "./src/customer-app/assets/slotblogo.png",
@@ -15,7 +19,7 @@
     },
     "android": {
       "package": "com.slotb.partner",
-      "versionCode": 9,
+      "versionCode": 12,
       "backgroundColor": "#000000",
       "userInterfaceStyle": "dark",
       "adaptiveIcon": {
@@ -69,7 +73,10 @@
             "enableProguardInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
             "jsEngine": "hermes",
-            "enableMinifyInReleaseBuilds": true
+            "enableMinifyInReleaseBuilds": true,
+            "extraMavenRepos": [
+              "https://jitpack.io"
+            ]
           }
         }
       ]
@@ -77,9 +84,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "fad578e4-325f-4aa4-814e-5b41b5f69709"
+        "projectId": "f6e2691d-dcbd-4ae5-bbe4-5c8d56464ba2"
       }
     },
-    "owner": "mayankslotb"
+    "owner": "slotb2"
   }
 }

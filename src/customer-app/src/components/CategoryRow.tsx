@@ -52,7 +52,39 @@ export default function CategoryRow({ scrollY, navigation }: Props) {
     });
 
     const handlePress = (cat: Category) => {
-        if (cat.isTab) {
+        if (cat.id === 'medical') {
+            navigation.navigate('coming-soon', {
+                title: 'SlotB Medical',
+                subtitle: 'Booking nearby hospitals & clinics will be live shortly.',
+                emoji: '🩺',
+                primaryColor: '#14B8A6',
+                secondaryColor: '#042F2E'
+            });
+        } else if (cat.id === 'gym') {
+            navigation.navigate('coming-soon', {
+                title: 'SlotB Gym',
+                subtitle: 'Gym booking & memberships are arriving soon.',
+                emoji: '🏋️',
+                primaryColor: '#FFD740',
+                secondaryColor: '#1A1A1A'
+            });
+        } else if (cat.id === 'groceries') {
+            navigation.navigate('coming-soon', {
+                title: 'SlotB Grocery',
+                subtitle: 'Hyperlocal grocery delivery is on its way!',
+                emoji: '🛒',
+                primaryColor: '#10B981',
+                secondaryColor: '#022C22'
+            });
+        } else if (cat.id === 'home-service') {
+            navigation.navigate('coming-soon', {
+                title: 'SlotB Home-Service',
+                subtitle: 'Electricians, Plumbers & local pros will be available at your doorstep soon!',
+                emoji: '🔧',
+                primaryColor: '#7C3AFF',
+                secondaryColor: '#0A0A1A'
+            });
+        } else if (cat.isTab) {
             navigation.navigate('Main', { screen: cat.screen });
         } else {
             navigation.navigate(cat.screen);

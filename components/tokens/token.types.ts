@@ -19,6 +19,10 @@ export interface Token {
     reminderCount?: number;
     lastReminderAt?: number;
     lastDoneSuggestionAt?: number;
+
+    // Payment
+    paymentStatus?: 'paid' | 'unpaid';
+    razorpayPaymentId?: string;
 }
 
 export type TokenFilter = 'all' | TokenStatus;

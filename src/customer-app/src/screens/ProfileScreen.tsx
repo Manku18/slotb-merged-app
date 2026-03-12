@@ -240,8 +240,6 @@ export default function ProfileScreen() {
         setEditVisible(true);
     };
 
-    // Sparkle on cash card
-    const sparkle = useRef(new Animated.Value(0)).current;
     // Pulse for the online dot
     const pulse = useRef(new Animated.Value(1)).current;
     // Scale for card entrance
@@ -251,13 +249,6 @@ export default function ProfileScreen() {
     useEffect(() => {
         if (!user) return;
         fetchProfile();
-
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(sparkle, { toValue: 1, duration: 1400, useNativeDriver: true }),
-                Animated.timing(sparkle, { toValue: 0, duration: 1400, useNativeDriver: true }),
-            ])
-        ).start();
 
         Animated.loop(
             Animated.sequence([
@@ -276,9 +267,6 @@ export default function ProfileScreen() {
     if (!user) {
         return null;
     }
-
-    const sparkleOpacity = sparkle.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] });
-    const sparkleScale = sparkle.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1.3] });
 
     const avatarSource = profileData?.profile_pic
         ? { uri: profileData.profile_pic }
@@ -390,51 +378,12 @@ export default function ProfileScreen() {
                         <View style={styles.statsCard}>
                             <StatItem value={String(profileData?.bookings || 0)} label="Bookings" color={Colors.primary} />
                             <View style={styles.statDiv} />
-                            <StatItem value="0" label="Favourites" color={Colors.secondary} />
-                            <View style={styles.statDiv} />
                             <StatItem value={String(profileData?.points || 0)} label="Points" color={Colors.accent} />
                         </View>
 
                     </LinearGradient>
                 </AnimatedSection>
 
-                {/* ── Cash Card ── */}
-                <AnimatedSection delay={150}>
-                    <Animated.View style={[styles.cardWrap, { opacity: cardOpacity, transform: [{ scale: cardScale }] }]}>
-                        <LinearGradient
-                            colors={['#6366f1', '#8b5cf6', '#a78bfa']}
-                            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                            style={styles.cashCard}
-                        >
-                            <View style={styles.c1} />
-                            <View style={styles.c2} />
-                            <View style={styles.c3} />
-
-                            <Animated.View style={[styles.sparkle, { opacity: sparkleOpacity, transform: [{ scale: sparkleScale }] }]}>
-                                <Zap size={18} color="rgba(255,255,255,0.95)" fill="rgba(255,255,255,0.95)" />
-                            </Animated.View>
-
-                            <View style={styles.cardTop}>
-                                <View>
-                                    <Text style={styles.cardName}>SlotB Cash</Text>
-                                    <Text style={styles.cardSub}>Save on bookings</Text>
-                                </View>
-                                <CreditCard color="rgba(255,255,255,0.7)" size={26} strokeWidth={1.5} />
-                            </View>
-
-                            <Text style={styles.amount}>₹ {parseFloat(profileData?.wallet_balance || '0.00').toFixed(2)}</Text>
-
-                            <View style={styles.cardBottom}>
-                                <TouchableOpacity style={styles.addBtn} activeOpacity={0.85}>
-                                    <Text style={styles.addBtnText}>+ Refill Wallet</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity activeOpacity={0.8}>
-                                    <Text style={styles.txnLink}>Details →</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </LinearGradient>
-                    </Animated.View>
-                </AnimatedSection>
 
                 {/* ── Quick Actions ── */}
                 <AnimatedSection delay={250}>
@@ -448,7 +397,6 @@ export default function ProfileScreen() {
                                 bg="#eef2ff"
                                 onPress={() => navigation.navigate('MyBookings')}
                             />
-                            <ActionTile icon={Heart} label="Favourites" color="#f43f5e" bg="#fff1f2" />
                         </View>
                     </View>
                 </AnimatedSection>
@@ -458,9 +406,19 @@ export default function ProfileScreen() {
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Account</Text>
                         <View style={styles.card}>
-                            <SettingRow icon={ShieldCheck} label="Privacy & Security" sub="Manage permissions" />
+                            <SettingRow
+                                icon={ShieldCheck}
+                                label="Privacy & Security"
+                                sub="Manage permissions"
+                                onPress={() => navigation.navigate('Privacy')}
+                            />
                             <View style={styles.div} />
-                            <SettingRow icon={LifeBuoy} label="Help Center" sub="Live support 24/7" />
+                            <SettingRow
+                                icon={LifeBuoy}
+                                label="Help Center"
+                                sub="Live support 24/7"
+                                onPress={() => navigation.navigate('HelpCentre')}
+                            />
                         </View>
                     </View>
                 </AnimatedSection>
@@ -630,30 +588,6 @@ const styles = StyleSheet.create({
     statValue: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
     statLabel: { fontSize: 11, color: Colors.textMuted, marginTop: 3, fontWeight: '500' },
     statDiv: { width: 1, height: 36, backgroundColor: Colors.border },
-
-    // Cash Card
-    cardWrap: { paddingHorizontal: 20, marginTop: 20 },
-    cashCard: {
-        borderRadius: 26, padding: 26, overflow: 'hidden',
-        shadowColor: '#6366f1', shadowOffset: { width: 0, height: 14 },
-        shadowOpacity: 0.35, shadowRadius: 22, elevation: 14,
-    },
-    c1: { position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(255,255,255,0.07)', top: -70, right: -50 },
-    c2: { position: 'absolute', width: 130, height: 130, borderRadius: 65, backgroundColor: 'rgba(255,255,255,0.05)', bottom: -40, left: -10 },
-    c3: { position: 'absolute', width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.04)', top: 30, right: 80 },
-    sparkle: { position: 'absolute', top: 22, right: 80 },
-    cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-    cardName: { color: '#fff', fontSize: 15, fontWeight: '700' },
-    cardSub: { color: 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 2 },
-    amount: { color: '#fff', fontSize: 38, fontWeight: '800', marginVertical: 16, letterSpacing: -1 },
-    cardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    addBtn: {
-        backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.35)',
-        paddingHorizontal: 22, paddingVertical: 11, borderRadius: 14,
-    },
-    addBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-    txnLink: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '600' },
 
     // Sections
     section: { paddingHorizontal: 20, marginTop: 22 },

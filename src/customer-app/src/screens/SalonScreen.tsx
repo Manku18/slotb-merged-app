@@ -574,7 +574,7 @@ const DetailsModal = ({ visible, onClose, salon, onBook }: { visible: boolean; o
 };
 
 // ------ Salon Card (premium horizontal portrait card) ------------------------------------------------------
-const SalonCard = ({ salon, userCoords, onDetails, onBook }: { salon: Salon; userCoords: any; onDetails: () => void; onBook: (salonId: string, salonName: string) => void, key?: string | number }) => {
+const SalonCard = ({ salon, userCoords, onDetails, onBook, isGrid = false }: { salon: Salon; userCoords: any; onDetails: () => void; onBook: (salonId: string, salonName: string, address?: string, services?: any[]) => void, key?: string | number, isGrid?: boolean }) => {
     const exactDist = React.useMemo(() => {
         if (!userCoords || !salon.latitude || !salon.longitude) return salon.distance;
         const d = calculateDistance(userCoords.latitude, userCoords.longitude, Number(salon.latitude), Number(salon.longitude));
@@ -591,10 +591,10 @@ const SalonCard = ({ salon, userCoords, onDetails, onBook }: { salon: Salon; use
     };
 
     return (
-        <View style={styles.card}>
+        <View style={[styles.card, isGrid && { width: '100%', elevation: 4 }]}>
             {/* Image block with overlay */}
             <View style={styles.cardImgWrapper}>
-                <Image source={{ uri: salon.image }} style={styles.cardImg} resizeMode="cover" />
+                <Image source={{ uri: salon.image }} style={[styles.cardImg, isGrid && { width: '100%', height: 100 }]} resizeMode="cover" />
 
                 {/* Dark scrim at bottom */}
                 <LinearGradient
@@ -608,6 +608,7 @@ const SalonCard = ({ salon, userCoords, onDetails, onBook }: { salon: Salon; use
                 <View style={[
                     styles.openGlassPill,
                     !salon.isOpen && { backgroundColor: 'rgba(107,114,128,0.85)' },
+                    isGrid && { paddingHorizontal: 6, paddingVertical: 3, top: 6, left: 6 }
                 ]}>
                     {salon.isOpen && <View style={styles.openDot} />}
                     <Text style={styles.openPillText}>{salon.isOpen ? 'OPEN' : 'CLOSED'}</Text>
@@ -783,12 +784,14 @@ export default function SalonScreen() {
         // Initial fetch
         fetchSalons();
         fetchCarousel();
+        checkUnread();
 
         // ── LIVE POLLING ────────────────────────────────────────────────────────
         // refetch every 15 seconds to keep token numbers live
         const pollInterval = setInterval(() => {
             fetchSalons();
             fetchCarousel();
+            checkUnread();
         }, 15000);
 
         return () => clearInterval(pollInterval);
@@ -854,7 +857,30 @@ export default function SalonScreen() {
         }
     }, [route.params, salons]);
 
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [isTopSalonsExpanded, setIsTopSalonsExpanded] = useState(false);
+
     const [initialBookingServices, setInitialBookingServices] = useState<any[]>([]);
+
+    const checkUnread = useCallback(async () => {
+        if (!user?.email) { setUnreadCount(0); return; }
+        try {
+            const url = `https://slotb.in/api_notifications.php?action=get_unread_count&email=${encodeURIComponent(user.email)}&district=${encodeURIComponent(userLocation)}`;
+            const res = await fetch(url);
+            const text = await res.text();
+            const startIdx = text.indexOf('{');
+            if (startIdx !== -1) {
+                const d = JSON.parse(text.substring(startIdx));
+                if (d.status === 'ok') setUnreadCount(d.count);
+            }
+        } catch (e) { }
+    }, [user?.email, userLocation]);
+
+    useFocusEffect(
+        useCallback(() => {
+            checkUnread();
+        }, [checkUnread])
+    );
 
     // ---- Open Booking Modal ----
     const handleBooking = (shopId: string, shopName: string, address?: string, initialServices?: any[]) => {
@@ -1059,7 +1085,7 @@ export default function SalonScreen() {
                                 hitSlop={8}
                             >
                                 <Bell size={18} color="#374151" strokeWidth={2} />
-                                <View style={styles.salonBellDot} />
+                                {unreadCount > 0 && <View style={styles.salonBellDot} />}
                             </Pressable>
                         </View>
                     </Animated.View>
@@ -1233,29 +1259,47 @@ export default function SalonScreen() {
                 {/* ---- SECTION HEADER ---- */}
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Top Salons Near You</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('MyBookings')}><Text style={styles.seeAll}>See All </Text></TouchableOpacity>
+                    <TouchableOpacity onPress={() => setIsTopSalonsExpanded(!isTopSalonsExpanded)}>
+                        <Text style={styles.seeAll}>{isTopSalonsExpanded ? 'Show Less' : 'See All'}</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* ---- HORIZONTAL SALON CARDS ---- */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.cardsRow}
-                    decelerationRate="fast"
-                    snapToInterval={CARD_W + 14}
-                    snapToAlignment="start"
-                    disableIntervalMomentum={true}
-                >
-                    {filteredSalons.map((salon) => (
-                        <SalonCard
-                            key={salon.id}
-                            salon={salon}
-                            userCoords={coords}
-                            onDetails={() => { setSelectedSalon(salon); setModalVisible(true); }}
-                            onBook={handleBooking}
-                        />
-                    ))}
-                </ScrollView>
+                {/* ---- SALON CARDS ---- */}
+                {!isTopSalonsExpanded ? (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.cardsRow}
+                        decelerationRate="fast"
+                        snapToInterval={CARD_W + 14}
+                        snapToAlignment="start"
+                        disableIntervalMomentum={true}
+                    >
+                        {filteredSalons.map((salon) => (
+                            <SalonCard
+                                key={salon.id}
+                                salon={salon}
+                                userCoords={coords}
+                                onDetails={() => { setSelectedSalon(salon); setModalVisible(true); }}
+                                onBook={handleBooking}
+                            />
+                        ))}
+                    </ScrollView>
+                ) : (
+                    <View style={styles.expandedGrid}>
+                        {filteredSalons.map((salon) => (
+                            <View key={salon.id} style={styles.gridItem}>
+                                <SalonCard
+                                    salon={salon}
+                                    userCoords={coords}
+                                    onDetails={() => { setSelectedSalon(salon); setModalVisible(true); }}
+                                    onBook={handleBooking}
+                                    isGrid={true}
+                                />
+                            </View>
+                        ))}
+                    </View>
+                )}
 
                 {/* ---- SECTION: BOOK FROM RECENTS ---- */}
                 <View style={[styles.sectionHeader, { marginTop: 16 }]}>
@@ -1395,6 +1439,17 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         paddingHorizontal: 14,
         gap: 10,
+    },
+    expandedGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        paddingHorizontal: 16,
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    gridItem: {
+        width: (width - 44) / 2, // 2 columns with gaps
+        marginBottom: 12,
     },
 
     // Header -- legacy (kept for reference, not used by new header)

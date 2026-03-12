@@ -21,6 +21,7 @@ import {
   Linking,
   ImageBackground
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 
 // ... (Existing Constants remain same)
 
@@ -54,7 +55,7 @@ const ESSENTIALS_DATA = [
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, authKey, login, notifications, notificationsBreakdown, settings, setStats, setEarnings, setTokens, setPartners, setNotifications, setMaintenance, maintenance, setShowPlans } = useAppStore();
+  const { user, authKey, login, notifications, notificationsBreakdown, settings, setStats, setEarnings, setTokens, setPartners, setNotifications, setMaintenance, maintenance, showPlans, setShowPlans } = useAppStore();
   const { colors } = useTheme();
 
   const [isShopOpen, setShopOpen] = useState(true);
@@ -188,11 +189,16 @@ export default function HomeScreen() {
             const updatedUser = {
               ...user,
               shopName: data.shop.name || user.shopName,
+              email: data.shop.email || user.email,
+              phone: data.shop.phone || user.phone,
               upiId: data.shop.upi_id || user.upiId,
               paymentQr: data.shop.payment_qr || user.paymentQr,
               qrCode: data.shop.qr_code || user.qrCode,
               image: data.shop.profileImage || user.image,
-              avatar: data.shop.profileImage || user.avatar
+              avatar: data.shop.profileImage || user.avatar,
+              subscription_end_date: data.shop.subscription_end_date,
+              current_plan_id: data.shop.current_plan_id,
+              is_subscription_active: data.shop.is_subscription_active
             };
             if (authKey) login(updatedUser, authKey);
           } catch (e) {
@@ -412,12 +418,12 @@ export default function HomeScreen() {
               <View style={styles.statusInfo}>
                 <View style={[
                   styles.statusIndicator,
-                  { backgroundColor: isShopOpen ? colors.success : '#FFFFFF' }
+                  { backgroundColor: (isShopOpen && user?.is_subscription_active) ? colors.success : '#D1D5DB' }
                 ]} />
                 <View>
                   <Text style={[
                     styles.statusTitle,
-                    { color: isShopOpen ? colors.textPrimary : '#FFFFFF' }
+                    { color: (isShopOpen && user?.is_subscription_active) ? colors.textPrimary : (user?.is_subscription_active ? '#FFFFFF' : colors.textTertiary) }
                   ]}>
                     LIVE AVAILABILITY
                   </Text>
@@ -427,14 +433,17 @@ export default function HomeScreen() {
                   ]}>
                     {isShopOpen ? 'OPEN NOW' : 'CLOSED'}
                   </Text>
-                  <TouchableOpacity onPress={() => setSmartMode(!isSmartMode)} style={[
-                    styles.smartBadge,
-                    !isShopOpen && { backgroundColor: 'rgba(255,255,255,0.2)' }
-                  ]}>
-                    <Ionicons name="sparkles" size={10} color={isShopOpen ? colors.primary : '#FFFFFF'} />
+                  <TouchableOpacity
+                    onPress={() => setSmartMode(!isSmartMode)}
+                    style={[
+                      styles.smartBadge,
+                      !isShopOpen && { backgroundColor: 'rgba(0,0,0,0.05)' }
+                    ]}
+                  >
+                    <Ionicons name="sparkles" size={10} color={isShopOpen ? colors.primary : '#9CA3AF'} />
                     <Text style={[
                       styles.smartText,
-                      { color: isShopOpen ? colors.primary : '#FFFFFF' }
+                      { color: isShopOpen ? colors.primary : '#9CA3AF' }
                     ]}>
                       Smart {isSmartMode ? 'ON' : 'OFF'}
                     </Text>
@@ -449,17 +458,17 @@ export default function HomeScreen() {
               >
                 <View style={styles.switchContainer}>
                   <Switch
-                    trackColor={{ false: '#FFFFFF', true: colors.primary }}
-                    thumbColor={isShopOpen ? colors.surface : '#FF0000'}
-                    ios_backgroundColor="#FFFFFF"
+                    trackColor={{ false: '#D1D5DB', true: colors.primary }}
+                    thumbColor={isShopOpen ? colors.surface : '#9CA3AF'}
+                    ios_backgroundColor="#D1D5DB"
                     onValueChange={async (value) => {
-                      setShopOpen(value); // Optimistic update
+                      setShopOpen(value);
                       if (user?.id) {
                         try {
                           const { apiService } = require('@/services/api');
                           await apiService.toggleShopStatus(user.id, value);
                         } catch (e) {
-                          setShopOpen(!value); // Revert on failure
+                          setShopOpen(!value);
                           alert("Failed to update status");
                         }
                       }
@@ -469,6 +478,7 @@ export default function HomeScreen() {
                 </View>
               </TouchableOpacity>
             </View>
+
           </GlassCard>
         </View>
 
@@ -594,7 +604,8 @@ export default function HomeScreen() {
         </View>
 
         {/* Partner Insights (Increased height to 50vh) */}
-        < PricingSection />
+        {/* Partner Pricing / Upgrade Section - Only shown if not active */}
+        {showPlans && !user?.is_subscription_active && <PricingSection />}
 
       </ScrollView >
       <ComingSoonModal
@@ -798,6 +809,62 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  lockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 24,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  lockContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(225, 29, 72, 0.2)',
+    shadowColor: '#E11D48',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  lockIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(225, 29, 72, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lockTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#E11D48',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  lockMessage: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#374151',
+    lineHeight: 14,
+  },
+  lockBuyButton: {
+    backgroundColor: '#000',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginLeft: 10,
+  },
+  lockBuyButtonText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '800',
   },
   statusCard: {
     marginHorizontal: 20,

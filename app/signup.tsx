@@ -214,6 +214,8 @@ export default function SignupScreen() {
                     id: user.id.toString(),
                     name: user.owner_name,
                     shopName: user.shop_name,
+                    email: user.email,
+                    phone: user.phone,
                     qrCode: user.qr_code,
                     upiId: user.upi_id || '',
                 }, authKey);
